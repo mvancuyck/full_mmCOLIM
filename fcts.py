@@ -31,8 +31,8 @@ from astropy.stats import gaussian_fwhm_to_sigma
 import astropy.convolution as conv
 from matplotlib.colors import LogNorm
 import time
-from analysis_fcts.set_k import * 
-from analysis_fcts.scientific_notation import * 
+from set_k import * 
+from scientific_notation import * 
 from specutils import Spectrum1D
 from specutils.manipulation import FluxConservingResampler
 from scipy.interpolate import interp1d
