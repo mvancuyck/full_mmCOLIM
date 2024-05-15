@@ -1,0 +1,47 @@
+###Parameters added ###pixel_size = 50 #arcsec
+ 
+dkk = 0.1
+#list of redshift center the user want a map of. 
+z_list  = (0.5, 1.0, 1.5, 2.0, 2.5, 3.0)
+#redshift bin covered by the maps
+dz_list = (0.1, 0.2, 0.3 ) 
+#if n=0, makes a single map. if n>0, makes a cube centered on z constituted of n maps of width dz. 
+n_list =  (0.0,) 
+
+#####Cubes making parameters#####
+
+sides_cat_path = "/data/SIDES/PYSIDES_UCHUU_OUTPUTS/vpeak_complete/pySIDES_from_uchuu_tile_12_2.fits"
+pixel_size = 50 #arcsec
+
+#Instrument's parameters
+freq_min = 130e9 #Hz
+freq_max = 310e9 #Hz
+freq_resol = 1.5e9 #Hz
+
+telescop_diameter = 11.5 #m
+
+#################################
+
+#####Cubes output parameters#####
+
+run_name = "pySIDES_from_uchuu_12_2_TIM"
+output_path = 'OUTPUT_TIM_CUBES_FROM_UCHUU'
+
+#choose the type of cube to generate (beam-smoothed or not and the unit); you can select several type of cubes at the same times!
+save_cube_nobeam_Jy_pix = False #This one is always computed as a starting point, but it does not need to be saved
+gen_cube_nobeam_MJy_sr	= True
+gen_cube_smoothed_Jy_beam = False
+gen_cube_smoothed_MJy_sr = True
+
+#choose the [CII] recipe used to generate the cubes (both can be True)
+gen_cube_CII_de_Looze = True
+gen_cube_CII_Lagache  = False
+
+#Choose the cubes to save
+save_each_transition  = True 	#save the cubes for each tranistion (CO10, CO21, [CI]10, [CI]21...)
+save_each_line 	= True 	#save the cubes for each line (CO, [CI], [CII])
+save_continuum_only   = True	#save the cube(s) with only continuum
+save_all_lines	      = True	#save the cube(s) with all the lines
+save_full 	      = True	#save the full cube(s) with everything
+
+##############################
