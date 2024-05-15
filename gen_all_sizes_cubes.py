@@ -104,8 +104,8 @@ def gen_maps(cat, simu,
     params_name = f"{simu}_z{z}_dz{np.round(dz,3)}_{n_slices}slices_{field_size}deg2"
 
     params_cube = load_params("PAR_FILES/cubes.par")
+    dkk = params_cube['dkk']
     res = params_cube['pixel_size'] * u.arcsec
-
     pixel_sr = (res.value * np.pi/180/3600)**2 #solid angle of the pixel in sr
 
     #Spectral properties of the map:
@@ -144,8 +144,13 @@ def gen_maps(cat, simu,
         save_cube(output_path, f"{params_name}", 'galaxies', 'pix', cube_prop_dict, 'pix', cat_path, dz, cube=galaxy_cube) 
 
     if(compute_properties):
+
         dict_J = compute_other_linear_model_params( f"{params_name}_" + line, f"{params_name}_" + line,
                                                     output_path,line, rest_freq*u.GHz, z, dz, n_slices, field_size, cat)
+        
+        dict_Jg_noint = powspec_LIMgal(f"{params_name}_" + line, f"{params_name}_" + line, params_name+'galaxies', output_path,
+                                        line,  z, dz, n_slices, field_size, dkk)
+
         
     if(gen_continuum):
         lambda_list =  ( cst.c * (u.m/u.s)  / (np.asarray(freqs)*1e9 * u.Hz)  ).to(u.um)
