@@ -101,11 +101,10 @@ def gen_maps(cat, simu,
     '''
 
     #The prefix used to save the outputs maps:
-    params_name = f"{simu}_for_TIM_z{z}_dz{np.round(dz,3)}_{n_slices}slices_{field_size}deg2"
+    params_name = f"{simu}_z{z}_dz{np.round(dz,3)}_{n_slices}slices_{field_size}deg2"
 
-    params_cube = load_params("PAR_FILES/TIM_cubes_uchuu.par")
+    params_cube = load_params("PAR_FILES/cubes.par")
     res = params_cube['pixel_size'] * u.arcsec
-    if(field_size==0.1): res = params_cube['pixel_size_0.1deg2'] * u.arcsec
 
     pixel_sr = (res.value * np.pi/180/3600)**2 #solid angle of the pixel in sr
 
@@ -195,7 +194,7 @@ if __name__ == "__main__":
     #e.g: python gen_cubes_TIM_cubes_117deg2_uchuu.py 'outputs_uchuu/' 'uchuu'
     #will generate the 117deg2 SIDES-Uchuu maps around z+-dz/2 and saves them in outputs_uchuu
 
-    parser = argparse.ArgumentParser(description="gen TIM cubes from Uchuu",
+    parser = argparse.ArgumentParser(description="gen cubes from Uchuu",
                                      formatter_class = argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('output_path', help="output path of products", default = '.')
     args = parser.parse_args()
