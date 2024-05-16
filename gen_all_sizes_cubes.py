@@ -65,7 +65,7 @@ def worker_compute(params):
 
 def make_all_cubes(cat, simu, field_size, cat_path,line, rest_freq, ncpus=24):
 
-    tim_params = load_params('PAR_FILES/TIM_cubes_uchuu.par')
+    tim_params = load_params('PAR/TIM_cubes_uchuu.par')
     z_list = tim_params['z_list']
     dz_list = tim_params['dz_list']
     n_list = tim_params['n_list']
