@@ -83,6 +83,6 @@ cbar_greys = fig.colorbar(im, cax=cbar_ax_greys)
 cbar_greys.set_label('Galaxies count')
 
 fig.tight_layout(rect=[0, 0, 0.9, 1])  # Adjust the layout to make space for the colorbars
-fig.savefig('Slice_GHz.png', bbox_inches='tight', pad_inches=0)
+fig.savefig('figs/Slice_GHz.png', bbox_inches='tight', pad_inches=0)
 plt.show()
         
