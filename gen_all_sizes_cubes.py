@@ -65,7 +65,7 @@ def worker_compute(params):
 
 def make_all_cubes(cat, simu, field_size, cat_path,line, rest_freq, ncpus=24):
 
-    tim_params = load_params('PAR/TIM_cubes_uchuu.par')
+    tim_params = load_params('PAR/cubes.par')
     z_list = tim_params['z_list']
     dz_list = tim_params['dz_list']
     n_list = tim_params['n_list']
@@ -103,7 +103,7 @@ def gen_maps(cat, simu,
     #The prefix used to save the outputs maps:
     params_name = f"{simu}_z{z}_dz{np.round(dz,3)}_{n_slices}slices_{field_size}deg2"
 
-    params_cube = load_params("PAR_FILES/cubes.par")
+    params_cube = load_params("PAR/cubes.par")
     dkk = params_cube['dkk']
     res = params_cube['pixel_size'] * u.arcsec
     pixel_sr = (res.value * np.pi/180/3600)**2 #solid angle of the pixel in sr
