@@ -59,8 +59,8 @@ def give_map_spatial_freq(res, ny, nx):
     M[w_sup] = ny - M[w_sup]
     w_sup = np.where(N>nx/2)
     N[w_sup] = nx - N[w_sup]
-    Kx = M/nx/res
-    Ky = N/ny/res
+    Kx = N/nx/res
+    Ky = M/ny/res
     k_map = (Kx**2 + Ky**2)**(1/2)
         
     return k_map
