@@ -81,7 +81,7 @@ def make_all_cubes(cat, simu, field_size, cat_path,line, rest_freq, ncpus=24):
 
 def gen_maps(cat, simu, 
             z, n_slices, dz, field_size, cat_path, line, rest_freq, mstar_cut = 1e10, 
-            gen_continuum=True, gen_galaxies=True, gen_interlopers=True, compute_properties=True):
+            gen_continuum=True, gen_galaxies=True, gen_interlopers=True, compute_properties=True, ):
     
     '''
     Generate a map line intensity map as well as a galaxy map with stellar mass cut mstar_cut from a catalogue cat. 
@@ -232,10 +232,9 @@ if __name__ == "__main__":
             cat_subfield=cat.loc[(cat['ra']>=grid[0,idec,ira])&(cat['ra']<grid[0,idec,ira+1])&(cat['dec']>=grid[1,idec,ira])&(cat['dec']<grid[1,idec+1,ira])]
 
             for J, rest_freq in zip(line_list, rest_freq_list):
-                make_all_cubes(cat_subfield, f"{simu}_ntile_{l}", tile_size, dirpath, line=J, rest_freq = rest_freq, ncpus=4 )
+                make_all_cubes(cat_subfield, f"{simu}_ntile_{l}", tile_size, dirpath, line=J, rest_freq = rest_freq.value, ncpus=4 )
                 #gen_maps(cat_subfield, f"{simu}_ntile_{l}", 0.64, 0, 0.22, tile_size, dirpath, line=J,rest_freq = rest_freq.value)
 
-    
     for J, rest_freq in zip(line_list, rest_freq_list):
         make_all_cubes(cat, simu, fs, dirpath, line=J,rest_freq = rest_freq.value, ncpus=4 )
     
