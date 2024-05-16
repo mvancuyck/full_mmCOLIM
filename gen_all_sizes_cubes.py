@@ -234,9 +234,9 @@ if __name__ == "__main__":
             if l >= Nmax: break 
             cat_subfield=cat.loc[(cat['ra']>=grid[0,idec,ira])&(cat['ra']<grid[0,idec,ira+1])&(cat['dec']>=grid[1,idec,ira])&(cat['dec']<grid[1,idec+1,ira])]
 
-            for J, rest_freq in (line_list, rest_freq):
+            for J, rest_freq in (line_list, rest_freq_list):
                 make_all_cubes(cat_subfield, f"{simu}_ntile_{l}", tile_size, dirpath, line=J, rest_freq = rest_freq, ncpus=4 )
                 #gen_maps(cat_subfield, f"{simu}_ntile_{l}", 0.64, 0, 0.22, tile_size, dirpath, line='CII_de_Looze',rest_freq = freq_CII.value,)
 
-    for J, rest_freq in (line_list, rest_freq):
+    for J, rest_freq in (line_list, rest_freq_list):
         make_all_cubes(cat, simu, fs, dirpath, line=J,rest_freq = rest_freq.value, ncpus=4 )
