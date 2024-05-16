@@ -1,5 +1,5 @@
-from gen_cube_co_paper import *
-from fct_co_paper import *
+from fcts import *
+from gen_all_sizes_cubes import *
 from functools import partial
 from multiprocessing import Pool, cpu_count
 from matplotlib import gridspec
@@ -9,94 +9,8 @@ import matplotlib.markers as mmarkers
 import matplotlib.cm as cm
 from progress.bar import Bar
 import argparse
-
-def compute_dA(A,B,dB,C,dC, includenewaxis = False):
-    if(includenewaxis): return np.sqrt((dB/B)**2+( (dC/C)[:,:,np.newaxis] )**2)*A
-    else: return np.sqrt((dB/B)**2+(dC/C)**2)*A
-
-    
-def study_contrib_to_sled(dz):
-
-    all_I = np.load(f'I_mean_of_uchuu_dz{dz}_n2.0_all.npy')
-    ms_I  = np.load(f'I_mean_of_uchuu_dz{dz}_n2.0_ms.npy')
-    sb_I  = np.load(f'I_mean_of_uchuu_dz{dz}_n2.0_sb.npy')
-
-    #---------------------------
-    BS=10; plt.rc('font', size=BS); plt.rc('axes', titlesize=BS); plt.rc('axes', labelsize=BS); mks=6; lw=2
-    fig = plt.figure(figsize=(6,3), dpi=200) 
-    #for z, zi, c in zip(z_list, range(len(z_list)), colors ):
-    patchs = []
-    for j, line, rest_freq in zip(np.arange(8), line_list[:8], rest_freq_list[:8]):
-        c=colors_co[j];
-        plt.errorbar( z_list, 100* sb_I[:, j, 5] / all_I[:, j, 5], c=c, fmt='--D', lw=lw, markersize=mks)
-        patch = mlines.Line2D([], [], color=c, linestyle="--", marker="D", label=f'J={j+1}', markersize=mks, lw=lw); patchs.append(patch)
-    plt.legend(handles = patchs, loc='center left', bbox_to_anchor=(1.05, 0.5), fontsize=BS)
-    plt.xlabel('redshift')
-    plt.yscale("log")
-    plt.ylabel('Contribution of SB objects to $\\rm I_J$ [%]')
-    plt.tight_layout()
-    for extension in ("png", "pdf"): plt.savefig(f"sb_ms_2.{extension}")
-
-            
-def mean_SLED_uchuu(dz, n_avg=2, recompute = False):
-    #choose the type of frequency interval: fixe for one transition of fix redshift interval for all transitions
-    for type in ('all', 'ms', 'sb'):
-        name_I = f'I_mean_of_uchuu_dz{dz}_n{n_avg}_{type}.npy'
-        if(not os.path.isfile(name_I) or recompute):
-            embed()
-            simu, cat, cat_path, fs = load_cat()
-        else: cat=None
-    #For all objects then MS objects and SB objects: 
-    for type in ('all', 'ms', 'sb'):
-        name_I = f'I_mean_of_uchuu_dz{dz}_n{n_avg}_{type}.npy'
-        if(not os.path.isfile(name_I) or recompute):
-            if(type=='ms'): type_cat = cat.loc[cat["issb"] ==70]
-            if(type=='sb'): type_cat = cat.loc[cat["issb"] !=70]
-            else: type_cat = cat
-            #Compute the mean brighness of CO transitions up to J=8 with different ways for each redshift interval
-            I_dict = np.zeros((len(z_list), 8,16))
-            bar = Bar('Processing', max=len(z_list)*8)              
-            for z, Z in zip(z_list, range(len(z_list))):
-                for j, line, rest_freq in zip(np.arange(8), line_list[:8], rest_freq_list[:8]):
-                    #compute rest and observed frequencies at redshift z
-                    rest_freq = rest_freq.value
-                    nu_obs = rest_freq / (1+z)
-                    #Set the frequency intervall according to the choosen receipe
-                    dnu = nu_obs* dz/(1+z)
-                    #compute the size of the associate frequency slice
-                    nu_min = nu_obs - (n_avg*dnu) 
-                    nu_max = nu_obs + (n_avg*dnu) 
-                    nu_min_edge = nu_min - dnu/2
-                    nu_max_edge = nu_max + dnu/2
-                    #select sources within the frequency slice at redshift of interest.
-                    cat_line = type_cat.loc[ np.abs(  rest_freq/(1+type_cat['redshift'])  - nu_obs) <= (nu_max_edge - nu_min_edge)/2]
-                    #Mean brightness of the line
-                    I_dict[Z, j,0] = cat_line[f"I{line}"].mean() #Jy.km/s
-                    I_dict[Z, j,1] = cat_line[f"I{line}"].std()
-                    I_dict[Z, j,2] = cat_line[f"I{line}"].median()
-                    I_dict[Z, j,3] = np.quantile(cat_line[f"I{line}"], 0.25)
-                    I_dict[Z, j,4] = np.quantile(cat_line[f"I{line}"], 0.75)
-                    I_dict[Z, j,5] = cat_line[f"I{line}"].sum()
-                    #brightness ratio wrt CO32
-                    I_dict[Z, j,6] = (cat_line[f"I{line}"]/cat_line[f"ICO32"]).mean() #Jy.km/s
-                    I_dict[Z, j,7] = (cat_line[f"I{line}"]/cat_line[f"ICO32"]).std()
-                    I_dict[Z, j,8] = (cat_line[f"I{line}"]/cat_line[f"ICO32"]).median()
-                    I_dict[Z, j,9] = np.quantile(cat_line[f"I{line}"]/cat_line[f"ICO32"],0.25)
-                    I_dict[Z, j,10] = np.quantile(cat_line[f"I{line}"]/cat_line[f"ICO32"],0.75)
-                    #brightness ratio wrt CO10
-                    I_dict[Z, j,11] = (cat_line[f"I{line}"]/cat_line[f"ICO10"]).mean() #Jy.km/s
-                    I_dict[Z, j,12] = (cat_line[f"I{line}"]/cat_line[f"ICO10"]).std()
-                    I_dict[Z, j,13] = (cat_line[f"I{line}"]/cat_line[f"ICO10"]).median() #Jy.km/s
-                    I_dict[Z, j,14] =  np.quantile(cat_line[f"I{line}"]/cat_line[f"ICO10"],0.25)
-                    I_dict[Z, j,15] =  np.quantile(cat_line[f"I{line}"]/cat_line[f"ICO10"],0.75)
-                    bar.next()
-            bar.finish
-            np.save(name_I, np.asarray(I_dict), 'wb')        
-    all_I = np.load(f'I_mean_of_uchuu_dz{dz}_n{n_avg}_all.npy')
-    ms_I  = np.load(f'I_mean_of_uchuu_dz{dz}_n{n_avg}_ms.npy')
-    sb_I  = np.load(f'I_mean_of_uchuu_dz{dz}_n{n_avg}_sb.npy')
-
-    return all_I, ms_I, sb_I
+from pysides.load_params import *
+ 
 
 def co_sled_from_nsubfields(i_ref,n_slices,dz, res, field_size, ksimu,colors, interlopers = None, allpoints=False):
     #---------------------------
@@ -148,71 +62,162 @@ def co_sled_from_nsubfields(i_ref,n_slices,dz, res, field_size, ksimu,colors, in
                 
     return patchs, SLED_mes
 
-def compute_sled(recompute_sleds = False, ref = 'CO32', n_avg=2.0, dz=0.05,interlopers='all_lines'):
 
-    #Set simu params
-    field_size = 9*u.deg**2; res = res_subfield; ksimu = 3.3e-1
-    #indice of the transition of reference in line_list
-    i_ref = int(ref[-1])
-    #Quantum rotational number list
-    Jrot_list = np.arange(8)+1
-    #redshifts color code
-    colors = cm.copper(np.linspace(0,0.8,len(z_list)))
-    #--- SLED from Cross pk ---
-    patchs, SLED_mes = co_sled_from_nsubfields(i_ref,n_avg,dz, res,field_size,ksimu, colors, interlopers)   
-    #Normalisation by J_ref
-    B = SLED_mes[:,:,1:,0]
-    C = SLED_mes[:,:,0, 0]
-    A = B/C[:,:,np.newaxis]
-    SLED_mean   = np.mean(A, axis=0)
-    SLED_1sigma = np.std( A, axis=0)
-    SLED_median = np.median( A, axis=0)
-    SLED_1stq = np.quantile( A, 0.25, axis=0)
-    SLED_3rdq = np.quantile( A, 0.75, axis=0)
-    
-    #--- SLED from Catalog ---
-    I_dict, I_ms, I_sb = mean_SLED_uchuu(dz, n_avg, recompute=recompute_sleds)
-    #--------------------------
-    #patch for legend
-    #Figure' parameters
-    #---------------------------
-    
-    patch = mlines.Line2D([], [], color='k', linestyle='--',  label='Mean SLED')
-    patchs.append(patch)
-    patch = mlines.Line2D([], [], color='k', linestyle='None', marker='*', label=f'from cross-power spectra')
-    patchs.append(patch)
-    
-    BS=10; plt.rc('font', size=BS); plt.rc('axes', titlesize=BS); plt.rc('axes', labelsize=BS); lw=1; mk=5; elw=1
-    fig = plt.figure(figsize=(4,4), dpi=200) 
-    gs = gridspec.GridSpec(2, 1, height_ratios=[2, 1]); ax = plt.subplot(gs[0]);  axr = plt.subplot(gs[1])
-    #---------------------------
-    for z, zi, c in zip(z_list, range(len(z_list)), colors ):
-        N=6; M=N+1
-        ax.errorbar( Jrot_list,I_dict[zi,:,N],fmt = '--', color=c, ecolor=c, lw=1)
-        ax.fill_between( Jrot_list,I_dict[zi,:,N] - I_dict[zi,:,M], I_dict[zi,:,N] + I_dict[zi,:,M], color=c, alpha=0.3  )
-        ax.errorbar( Jrot_list-0.2+0.1*z, SLED_mean[zi,:], yerr=SLED_1sigma[zi,:],  fmt = '*',color=c, ecolor=c, markersize=mk, elinewidth=elw)
-        axr.errorbar(Jrot_list-0.2+0.1*z, SLED_mean[zi,:]/I_dict[zi,:,N]-1, yerr =SLED_1sigma[zi,:]/I_dict[zi,:,N] , fmt = '*',color=c, ecolor=c, markersize=mk, elinewidth=elw)
 
-    for J in range(1,7):
-        print(f'{J+1}: {np.mean(100 * (I_dict[0,J,M]/I_dict[0,J,N]) )}')
-    ax.set_ylabel(r"$ \rm R_\mathrm{J-3} = I_{CO(J-J-1)}/I_{CO(3-2)} $")
-    ax.set_xlim(0.5, 8.5)
-    ax.set_ylim(0.2, 2.5)
-    ax.legend(handles = patchs, loc= 'upper left',fontsize=5) #4.5
-    #---------------------------
-    ax = plt.subplot(gs[1])
-    ax.plot((0,9), np.zeros(2), c='grey', lw=lw)
-    ax.set_ylabel("relative difference")
-    ax.set_xlabel(r"Quantum rotational number J")
-    ax.set_xlim(0.5, 8.5)
-    ax.set_ylim(-0.2,1.6)        
-    ax.tick_params(axis = "x", which='major', tickdir = "inout", top = True, color='k')
-    #---------------------------
-    fig.tight_layout(); fig.subplots_adjust(hspace=.0)
-    for extension in ("png", "pdf"): plt.savefig(f"sled.{extension}")
+
+
+def compute_sled_cat(z_list, dz_list, simu = 'uchuu', recompute = False):
+    #choose the type of frequency interval: fixe for one transition of fix redshift interval for all transitions
+    if(recompute):
+
+        if(simu == 'bolshoi'): 
+            #With SIDES Bolshoi, for rapid tests. 
+            dirpath="/home/mvancuyck/"
+            cat = Table.read(dirpath+'pySIDES_from_original.fits')
+            cat = cat.to_pandas(); simu = 'bolshoi'
+        else: simu, cat, cat_path, fs = load_cat()
+
+        bar = Bar('computing SLED from catalog', max=len(z_list)*len(dz_list)*8*3)  
+        for type in ('all', 'ms', 'sb'):
+
+            name_I = f'dict_dir/I_mean_of_uchuu_n0_{type}.npy'
+            #Compute the mean brighness of CO transitions up to J=8 with different ways for each redshift interval
+            I_dict = np.zeros((len(z_list), len(dz_list), 8,16))
+
+            for iz, z in enumerate(z_list):
+                for idz, dz in enumerate(dz_list):
+
+
+                    if(simu != 'bolshoi'):
+                        if(type=='ms'): type_cat = cat.loc[cat["issb"] ==70]
+                        if(type=='sb'): type_cat = cat.loc[cat["issb"] !=70]
+                        else: type_cat = cat
+                    else: 
+                        if(type=='ms'): type_cat = cat.loc[cat["issb"] ==False]
+                        if(type=='sb'): type_cat = cat.loc[cat["issb"] !=True]
+                        else: type_cat = cat
+
+                    for j, (line, rest_freq) in enumerate(zip(line_list[:8], rest_freq_list[:8])):
+                        
+                        #compute rest and observed frequencies at redshift z
+                        rest_freq = rest_freq.value
+                        nu_obs = rest_freq / (1+z)
+                            
+                        #Set the frequency intervall according to the choosen receipe
+                        dnu = nu_obs* dz/(1+z)
+                            
+                        #compute the size of the associate frequency slice
+                        nu_min = nu_obs - (0*dnu) 
+                        nu_max = nu_obs + (0*dnu) 
+                        nu_min_edge = nu_min - dnu/2
+                        nu_max_edge = nu_max + dnu/2
+                            
+                        #select sources within the frequency slice at redshift of interest.
+                        cat_line = type_cat.loc[ np.abs(  rest_freq/(1+type_cat['redshift'])  - nu_obs) <= (nu_max_edge - nu_min_edge)/2]
+                            
+                        #Mean brightness of the line
+                        I_dict[iz, idz, j,0] = cat_line[f"I{line}"].mean() #Jy.km/s
+                        I_dict[iz, idz, j,1] = cat_line[f"I{line}"].std()
+                        I_dict[iz, idz, j,2] = cat_line[f"I{line}"].median()
+                        I_dict[iz, idz, j,3] = np.quantile(cat_line[f"I{line}"], 0.25)
+                        I_dict[iz, idz, j,4] = np.quantile(cat_line[f"I{line}"], 0.75)
+                        I_dict[iz, idz, j,5] = cat_line[f"I{line}"].sum()
+                        #brightness ratio wrt CO32
+                        I_dict[iz, idz, j,6] = (cat_line[f"I{line}"]/cat_line[f"ICO32"]).mean() #Jy.km/s
+                        I_dict[iz, idz, j,7] = (cat_line[f"I{line}"]/cat_line[f"ICO32"]).std()
+                        I_dict[iz, idz, j,8] = (cat_line[f"I{line}"]/cat_line[f"ICO32"]).median()
+                        I_dict[iz, idz, j,9] = np.quantile(cat_line[f"I{line}"]/cat_line[f"ICO32"],0.25)
+                        I_dict[iz, idz, j,10] = np.quantile(cat_line[f"I{line}"]/cat_line[f"ICO32"],0.75)
+                        #brightness ratio wrt CO10
+                        I_dict[iz, idz, j,11] = (cat_line[f"I{line}"]/cat_line[f"ICO10"]).mean() #Jy.km/s
+                        I_dict[iz, idz, j,12] = (cat_line[f"I{line}"]/cat_line[f"ICO10"]).std()
+                        I_dict[iz, idz, j,13] = (cat_line[f"I{line}"]/cat_line[f"ICO10"]).median() #Jy.km/s
+                        I_dict[iz, idz, j,14] =  np.quantile(cat_line[f"I{line}"]/cat_line[f"ICO10"],0.25)
+                        I_dict[iz, idz, j,15] =  np.quantile(cat_line[f"I{line}"]/cat_line[f"ICO10"],0.75)
+                        bar.next() 
+
+            np.save(name_I, np.asarray(I_dict), 'wb')  
+
+        bar.finish
+
+    all_I = np.load(f'dict_dir/I_mean_of_uchuu_n0_all.npy')
+    ms_I  = np.load(f'dict_dir/I_mean_of_uchuu_n0_ms.npy')
+    sb_I  = np.load(f'dict_dir/I_mean_of_uchuu_n0_sb.npy')
+
+    return all_I, ms_I, sb_I
+
+
+def plot_sled_fig(z_list, dz_list, recompute_sleds):
+    '''
+    Change the ref CO transition by hand!!!
+    '''
+
+    I_dict, ms_I, sb_I = compute_sled_cat(z_list, dz_list, simu = 'bolshoi', recompute = recompute_sleds)
+
+    for idz, dz in enumerate(dz_list):
+
+        BS=10; plt.rc('font', size=BS); plt.rc('axes', titlesize=BS); plt.rc('axes', labelsize=BS); lw=1; mk=5; elw=1
+        fig = plt.figure(figsize=(4,4), dpi=200) 
+        gs = gridspec.GridSpec(2, 1, height_ratios=[2, 1]); ax = plt.subplot(gs[0]);  axr = plt.subplot(gs[1])
+
+        patchs = []
+        patch = mlines.Line2D([], [], color='k', linestyle='solid',  label='Mean SLED')
+        patchs.append(patch)
+        patch = mlines.Line2D([], [], color='k', linestyle='None', marker='*', label=f'from cross-power spectra')
+        patchs.append(patch)
+
+        #--- SLED from Catalog ---
+        for zi, (z, c) in enumerate(zip(z_list, cm.copper(np.linspace(0,0.8,len(z_list))) )):
+            J_list = np.arange(I_dict.shape[2])+1
+            N=6; M=N+1
+            ax.errorbar(     J_list, I_dict[zi, idz, :,N], color=c, ecolor=c, lw=1)
+            ax.fill_between( J_list, I_dict[zi, idz, :,N] - I_dict[zi, idz, :, M], 
+                                     I_dict[zi, idz, :,N] + I_dict[zi, idz, :, M], 
+                                     color=c, alpha=0.3 )
+        #---------------------------
+
+        ax.set_ylabel(r"$ \rm R_\mathrm{J-3} = I_{CO(J-J-1)}/I_{CO(3-2)} $")
+        ax.set_xlim(0.5, 8.5)
+        ax.set_ylim(0.2, 2.5)
+        ax.legend(handles = patchs, loc= 'upper left',fontsize=5) #4.5
+        #---------------------------
+        ax = plt.subplot(gs[1])
+        ax.plot((0,9), np.zeros(2), c='grey', lw=lw)
+        ax.set_ylabel("relative difference")
+        ax.set_xlabel(r"Quantum rotational number J")
+        ax.set_xlim(0.5, 8.5)
+        ax.set_ylim(-0.2,1.6)        
+        ax.tick_params(axis = "x", which='major', tickdir = "inout", top = True, color='k')
+        #---------------------------
+        fig.tight_layout(); fig.subplots_adjust(hspace=.0)
+        for extension in ("png", "pdf"): plt.savefig(f"figs/sled_dz{dz}.{extension}", transparent=True)
+
+
+def contrib_ms_sb(z_list, dz_list, recompute_sleds): 
+
+    all_I, ms_I, sb_I = compute_sled_cat(z_list, dz_list, simu = 'bolshoi', recompute = recompute_sleds)
+
+    for idz, dz in enumerate(dz_list):
+        #---------------------------
+        BS=10; plt.rc('font', size=BS); plt.rc('axes', titlesize=BS); plt.rc('axes', labelsize=BS); mks=6; lw=2
+        fig = plt.figure(figsize=(6,3), dpi=200) 
+        #for z, zi, c in zip(z_list, range(len(z_list)), colors ):
+        patchs = []
+        colors_co = ('orange', 'r', 'b', 'cyan', 'g', 'purple', 'magenta', 'grey',)
+         
+        for j, (line, rest_freq, c) in enumerate(zip(line_list[:8], rest_freq_list[:8], colors_co)):
+            plt.errorbar( z_list, 100 -100 * (sb_I[:, idz, j, 5] / all_I[:, idz, j, 5]), c=c, fmt='--D', lw=lw, markersize=mks)
+            patch = mlines.Line2D([], [], color=c, linestyle="--", marker="D", label='$\\rm J_{up}$'+f'={j+1}', markersize=mks, lw=lw); patchs.append(patch)
+        
+        plt.legend(handles = patchs, loc='center left', bbox_to_anchor=(1.05, 0.5), fontsize=BS)
+        plt.xlabel('redshift')
+        plt.yscale("log")
+        plt.ylabel('Contribution of SB objects to $\\rm I_{J_{up}}$ [%]')
+        plt.tight_layout()
+        for extension in ("png", "pdf"): plt.savefig(f"figs/sb_ms.{extension}", transparent=True)
+        
     plt.show()
 
-    embed()
     
 if __name__ == "__main__":
 
@@ -222,5 +227,14 @@ if __name__ == "__main__":
     parser.add_argument('--recompute_sleds', help = "recompute CO sled from Uchuu catalogue", action="store_true")
     args = parser.parse_args()
 
-    compute_sled(recompute_sleds = args.recompute_sleds)
-    
+    #With SIDES Bolshoi, for rapid tests. 
+    tim_params = load_params('PAR/cubes.par')
+    z_list = tim_params['z_list']
+    dz_list = tim_params['dz_list']
+    n_list = tim_params['n_list']
+
+    if(False):
+        plot_sled_fig(z_list, dz_list, args.recompute_sleds)
+        plt.show()
+
+    contrib_ms_sb(z_list, dz_list, args.recompute_sleds)
