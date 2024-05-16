@@ -102,12 +102,10 @@ def gen_maps(cat, simu,
 
     #The prefix used to save the outputs maps:
     params_name = f"{simu}_z{z}_dz{np.round(dz,3)}_{n_slices}slices_{field_size}deg2"
-
     params_cube = load_params("PAR/cubes.par")
     dkk = params_cube['dkk']
     res = params_cube['pixel_size'] * u.arcsec
     pixel_sr = (res.value * np.pi/180/3600)**2 #solid angle of the pixel in sr
-
     #Spectral properties of the map:
     nu_obs   = rest_freq / (1+z)
     dnu = dz * nu_obs / (1+z)
@@ -123,7 +121,7 @@ def gen_maps(cat, simu,
     cube_prop_dict = set_wcs(cat_line, params_cube)
 
     #--- Creates the intrinsic line intensity map and save it ---#
-    S, channels = line_channel_flux_densities(line, freq_CII, cat_line, cube_prop_dict)
+    S, channels = line_channel_flux_densities(line, rest_freq, cat_line, cube_prop_dict)
     line_map, edges = np.histogramdd(sample=(channels, cube_prop_dict['pos'][0], cube_prop_dict['pos'][1]), 
                                      bins =(cube_prop_dict['z_edges'], cube_prop_dict['y_edges'], cube_prop_dict['x_edges']))
     if( line_map.sum() != len(cat_line) ): print('problem A')
@@ -148,9 +146,8 @@ def gen_maps(cat, simu,
         dict_J = compute_other_linear_model_params( f"{params_name}_" + line, f"{params_name}_" + line,
                                                     output_path,line, rest_freq*u.GHz, z, dz, n_slices, field_size, cat)
         
-        dict_Jg_noint = powspec_LIMgal(f"{params_name}_" + line, f"{params_name}_" + line, params_name+'galaxies', output_path,
+        dict_Jg_noint = powspec_LIMgal(f"{params_name}_" + line, f"{params_name}_" + line, params_name+'_galaxies', output_path,
                                         line,  z, dz, n_slices, field_size, dkk)
-
         
     if(gen_continuum):
         lambda_list =  ( cst.c * (u.m/u.s)  / (np.asarray(freqs)*1e9 * u.Hz)  ).to(u.um)
@@ -205,18 +202,16 @@ if __name__ == "__main__":
     args = parser.parse_args()
     output_path = args.output_path
 
-    simu, cat, dirpath, fs = load_cat()
+    #simu, cat, dirpath, fs = load_cat()
 
     #With SIDES Bolshoi, for rapid tests. 
-    '''
     dirpath="/home/mvancuyck/"
     cat = Table.read(dirpath+'pySIDES_from_original.fits')
     cat = cat.to_pandas()
     simu='pySIDES_from_bolshoi'; fs=2
-    '''
 
     Nmax=200; 
-    for tile_size in (0.1, 1, 9):
+    for tile_size in (1, 9):
         if(fs<tile_size): continue
  
         ragrid=np.arange(cat['ra'].min(),cat['ra'].max(),tile_size)
@@ -235,8 +230,10 @@ if __name__ == "__main__":
             cat_subfield=cat.loc[(cat['ra']>=grid[0,idec,ira])&(cat['ra']<grid[0,idec,ira+1])&(cat['dec']>=grid[1,idec,ira])&(cat['dec']<grid[1,idec+1,ira])]
 
             for J, rest_freq in zip(line_list, rest_freq_list):
-                make_all_cubes(cat_subfield, f"{simu}_ntile_{l}", tile_size, dirpath, line=J, rest_freq = rest_freq, ncpus=4 )
-                #gen_maps(cat_subfield, f"{simu}_ntile_{l}", 0.64, 0, 0.22, tile_size, dirpath, line='CII_de_Looze',rest_freq = freq_CII.value,)
+                #make_all_cubes(cat_subfield, f"{simu}_ntile_{l}", tile_size, dirpath, line=J, rest_freq = rest_freq, ncpus=4 )
+                gen_maps(cat_subfield, f"{simu}_ntile_{l}", 0.64, 0, 0.22, tile_size, dirpath, line=J,rest_freq = rest_freq.value)
 
+    '''
     for J, rest_freq in zip(line_list, rest_freq_list):
         make_all_cubes(cat, simu, fs, dirpath, line=J,rest_freq = rest_freq.value, ncpus=4 )
+    '''
