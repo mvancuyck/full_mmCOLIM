@@ -72,7 +72,9 @@ def make_all_cubes(cat, simu, field_size, cat_path,line, rest_freq, ncpus=24):
     
     params_list = []
     #for n in n_list:
-    for z, dz in zip(z_list, dz_list): params_list.append( list((z,dz,0 ))) 
+    for z in z_list:
+        for dz in dz_list: 
+            params_list.append( list((z,dz,0 ))) 
                 
     print("start parallelization")
     with Pool(ncpus, initializer=worker_init, initargs=list((cat, simu, field_size, cat_path,line, rest_freq ))) as p:
@@ -141,13 +143,6 @@ def gen_maps(cat, simu,
         if( galaxy_cube.sum() != len(cat_galaxies) ): print('problem B')
         save_cube(output_path, f"{params_name}", 'galaxies', 'pix', cube_prop_dict, 'pix', cat_path, dz, cube=galaxy_cube) 
 
-    if(compute_properties):
-
-        dict_J = compute_other_linear_model_params( f"{params_name}_" + line, f"{params_name}_" + line,
-                                                    output_path,line, rest_freq*u.GHz, z, dz, n_slices, field_size, cat)
-        
-        dict_Jg_noint = powspec_LIMgal(f"{params_name}_" + line, f"{params_name}_" + line, params_name+'_galaxies', output_path,
-                                        line,  z, dz, n_slices, field_size, dkk)
         
     if(gen_continuum):
         lambda_list =  ( cst.c * (u.m/u.s)  / (np.asarray(freqs)*1e9 * u.Hz)  ).to(u.um)
@@ -188,6 +183,21 @@ def gen_maps(cat, simu,
         full = cube_all_lines + continuum
         save_cube(output_path, f"{params_name}_{line}", 'full', "MJy_sr", cube_prop_dict, 'MJy per sr', cat_path, dz, cube=full)
 
+
+    if(compute_properties):
+
+        dict_J = compute_other_linear_model_params( f"{params_name}_" + line, f"{params_name}_" + line,
+                                                    output_path,line, rest_freq*u.GHz, z, dz, n_slices, field_size, cat)
+        
+        dict_Jg_noint = powspec_LIMgal(f"{params_name}_" + line, f"{params_name}_" + line, params_name+'_galaxies', output_path,
+                                        line,  z, dz, n_slices, field_size, dkk)
+        
+        dict_Jg_int = powspec_LIMgal(f"{params_name}_"+line, f"{params_name}_"+line+'_all_lines', params_name+'_galaxies', output_path,
+                                        line,  z, dz, n_slices, field_size, dkk)
+        
+        dict_Jg_int = powspec_LIMgal(f"{params_name}_"+line, f"{params_name}_"+line+'_full', params_name+'_galaxies', output_path,
+                                        line,  z, dz, n_slices, field_size, dkk)
+        
     return 0
 
 if __name__ == "__main__":
@@ -205,15 +215,15 @@ if __name__ == "__main__":
     simu, cat, dirpath, fs = load_cat()
 
     #With SIDES Bolshoi, for rapid tests. 
-    '''
+    ''' 
     dirpath="/home/mvancuyck/"
     cat = Table.read(dirpath+'pySIDES_from_original.fits')
     cat = cat.to_pandas()
     simu='pySIDES_from_bolshoi'; fs=2
     '''
-
+    
     Nmax=200; 
-    for tile_size in (9, 1):
+    for tile_size in (0.5, 9, 1):
         if(fs<tile_size): continue
  
         ragrid=np.arange(cat['ra'].min(),cat['ra'].max(),tile_size)
@@ -228,13 +238,13 @@ if __name__ == "__main__":
 
         for l, (ira, idec) in enumerate(coords):
             
-            if l >= Nmax: break 
+            if l+1 > Nmax: break 
             cat_subfield=cat.loc[(cat['ra']>=grid[0,idec,ira])&(cat['ra']<grid[0,idec,ira+1])&(cat['dec']>=grid[1,idec,ira])&(cat['dec']<grid[1,idec+1,ira])]
 
             for J, rest_freq in zip(line_list, rest_freq_list):
-                make_all_cubes(cat_subfield, f"{simu}_ntile_{l}", tile_size, dirpath, line=J, rest_freq = rest_freq.value, ncpus=4 )
+                make_all_cubes(cat_subfield, f"{simu}_ntile_{l}", tile_size, dirpath, line=J, rest_freq = rest_freq.value )
                 #gen_maps(cat_subfield, f"{simu}_ntile_{l}", 0.64, 0, 0.22, tile_size, dirpath, line=J,rest_freq = rest_freq.value)
 
     for J, rest_freq in zip(line_list, rest_freq_list):
-        make_all_cubes(cat, simu, fs, dirpath, line=J,rest_freq = rest_freq.value, ncpus=4 )
+        make_all_cubes(cat, simu, fs, dirpath, line=J,rest_freq = rest_freq.value )
     
