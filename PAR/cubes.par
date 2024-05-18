@@ -4,7 +4,7 @@ dkk = 0.1
 #list of redshift center the user want a map of. 
 z_list  = (0.5, 1.0, 1.5, 2.0, 2.5, 3.0)
 #redshift bin covered by the maps
-dz_list = (0.1, 0.2, 0.3 ) 
+dz_list = (0.1, 0.2 ) 
 #if n=0, makes a single map. if n>0, makes a cube centered on z constituted of n maps of width dz. 
 n_list =  (0.0,) 
 
