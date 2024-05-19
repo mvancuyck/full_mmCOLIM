@@ -83,7 +83,7 @@ def make_all_cubes(cat, simu, field_size, cat_path,line, rest_freq, ncpus=24):
 
 def gen_maps(cat, simu, 
             z, n_slices, dz, field_size, cat_path, line, rest_freq, mstar_cut = 1e10, 
-            gen_continuum=True, gen_galaxies=True, gen_interlopers=True, compute_properties=True, ):
+            gen_continuum=False, gen_galaxies=True, gen_interlopers=True, compute_properties=True, ):
     
     '''
     Generate a map line intensity map as well as a galaxy map with stellar mass cut mstar_cut from a catalogue cat. 
