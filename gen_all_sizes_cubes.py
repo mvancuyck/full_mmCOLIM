@@ -225,10 +225,10 @@ if __name__ == "__main__":
     Nmax=200; 
     for tile_size in (9, 1, 0.2, 0.02):
         if(fs<tile_size): continue
-        
+
  
-        ragrid=np.arange(cat['ra'].min(),cat['ra'].max(),tile_size)
-        decgrid=np.arange(cat['dec'].min(),cat['dec'].max(),tile_size)
+        ragrid=np.arange(cat['ra'].min(),cat['ra'].max(),np.sqrt(tile_size))
+        decgrid=np.arange(cat['dec'].min(),cat['dec'].max(),np.sqrt(tile_size))
         grid=np.array(np.meshgrid(ragrid,decgrid))
 
         ra_index = np.arange(0,len(ragrid)-1,1)
@@ -236,8 +236,6 @@ if __name__ == "__main__":
         ra_grid, dec_grid = np.meshgrid(ra_index, dec_index)
         # Flatten the grids and stack them into a single array
         coords = np.stack((ra_grid.flatten(), dec_grid.flatten()), axis=1)
-
-        embed()
 
         for l, (ira, idec) in enumerate(coords):
             
