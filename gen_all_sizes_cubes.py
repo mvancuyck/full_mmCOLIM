@@ -83,7 +83,7 @@ def make_all_cubes(cat, simu, field_size, cat_path,line, rest_freq, ncpus=12):
 
 def gen_maps(cat, simu, 
             z, n_slices, dz, field_size, cat_path, line, rest_freq, mstar_cut = 1e10, 
-            gen_continuum=False, gen_galaxies=True, gen_interlopers=True, compute_properties=True, ):
+            gen_continuum=True, gen_galaxies=True, gen_interlopers=True, compute_properties=True, ):
     
     '''
     Generate a map line intensity map as well as a galaxy map with stellar mass cut mstar_cut from a catalogue cat. 
@@ -195,7 +195,9 @@ def gen_maps(cat, simu,
         dict_Jg_int = powspec_LIMgal(f"{params_name}_"+line, f"{params_name}_"+line+'_all_lines', params_name+'_galaxies', output_path,
                                         line,  z, dz, n_slices, field_size, dkk)
         
-        dict_Jg_int = powspec_LIMgal(f"{params_name}_"+line, f"{params_name}_"+line+'_full', params_name+'_galaxies', output_path,
+        if(gen_continuum and gen_interlopers):
+
+            dict_Jg_int = powspec_LIMgal(f"{params_name}_"+line, f"{params_name}_"+line+'_full', params_name+'_galaxies', output_path,
                                         line,  z, dz, n_slices, field_size, dkk)
         
     return 0
@@ -225,7 +227,6 @@ if __name__ == "__main__":
     Nmax=200; 
     for tile_size in (9, 1, 0.2, 0.3):
         if(fs<tile_size): continue
-
  
         ragrid=np.arange(cat['ra'].min(),cat['ra'].max(),np.sqrt(tile_size))
         decgrid=np.arange(cat['dec'].min(),cat['dec'].max(),np.sqrt(tile_size))
