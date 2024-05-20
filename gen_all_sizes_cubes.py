@@ -63,7 +63,7 @@ def worker_compute(params):
     for z, dz, n_avg in params: gen_maps(cat, simu, z, n_avg, dz, field_size, cat_path, line, rest_freq)
     return 0
 
-def make_all_cubes(cat, simu, field_size, cat_path,line, rest_freq, ncpus=4):
+def make_all_cubes(cat, simu, field_size, cat_path,line, rest_freq, ncpus=12):
 
     tim_params = load_params('PAR/cubes.par')
     z_list = tim_params['z_list']
@@ -223,7 +223,7 @@ if __name__ == "__main__":
     '''
     
     Nmax=200; 
-    for tile_size in (9, 1, 0.2, 0.02):
+    for tile_size in (9, 1, 0.2, 0.3):
         if(fs<tile_size): continue
 
  
