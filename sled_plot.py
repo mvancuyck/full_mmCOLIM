@@ -171,6 +171,7 @@ def plot_sled_fig(z_list, dz_list, recompute_sleds):
             J_list = np.arange(I_dict.shape[2])+1
             N=6; M=N+1
             ax.errorbar(     J_list, I_dict[zi, idz, :,N], color=c, ecolor=c, lw=1)
+            
             ax.fill_between( J_list, I_dict[zi, idz, :,N] - I_dict[zi, idz, :, M], 
                                      I_dict[zi, idz, :,N] + I_dict[zi, idz, :, M], 
                                      color=c, alpha=0.3 )
