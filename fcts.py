@@ -42,7 +42,11 @@ def powspec_LIMgal(params, line, galaxy, path, J,  z, dz, n, field_size, dkk,
                    recompute=False, to_emb=False ):
 
     #----
-    dict_pks_name = f'dict_dir/dict_LIMgal_{params}.p'
+    if('all_lines' in line): with_interlopers = '_with_interlopers'
+    elif('full' in line): with_interlopers = '_full'
+    else: with_interlopers = ''
+
+    dict_pks_name = f'dict_dir/dict_LIMgal_{params}_{with_interlopers}.p'
     dico_exists = os.path.isfile(dict_pks_name)
     key_exists = False
     if(dico_exists): 
@@ -120,7 +124,12 @@ def powspec_LIMgal(params, line, galaxy, path, J,  z, dz, n, field_size, dkk,
 def compute_other_linear_model_params( params, line, path, J, rest_freq, z, dz, n_slices, field_size, cat, recompute=False, to_emb=False):
 
     #----
-    dict_pks_name = f'dict_dir/dict_LIMgal_{params}.p'
+
+    if('all_lines' in line): with_interlopers = '_with_interlopers'
+    elif('full' in line): with_interlopers = '_full'
+    else: with_interlopers = ''
+
+    dict_pks_name = f'dict_dir/dict_LIMgal_{params}{with_interlopers}.p'
     dico_exists = os.path.isfile(dict_pks_name)
     key_exists = False
     if(dico_exists): 
