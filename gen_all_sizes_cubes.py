@@ -171,7 +171,7 @@ def gen_maps(cat, simu,
                     cube_interlopers += line_map 
                     cube_all_lines += line_map   
                     print(f'This map is interloped by {Jp}')
-                    save_cube(output_path, f"{params_name}_{line}", f'{Jp}_interloper', "MJy_sr", cube_prop_dict, 'MJy per sr', cat_path, dz, cube=line_map)
+                    #save_cube(output_path, f"{params_name}_{line}", f'{Jp}_interloper', "MJy_sr", cube_prop_dict, 'MJy per sr', cat_path, dz, cube=line_map)
             if(line=='CO87'): 
                 save_cube(output_path, f"{params_name}_{line}", 'CO_all', "MJy_sr", cube_prop_dict, 'MJy per sr', cat_path, dz, cube=cube_interlopers)
                 save_cube(output_path, f"{params_name}_{line}", 'CO_interlopers', "MJy_sr", cube_prop_dict, 'MJy per sr', cat_path, dz, cube=cube_all_lines)
@@ -223,7 +223,7 @@ if __name__ == "__main__":
     '''
     
     Nmax=200; 
-    for tile_size in (9, 1):
+    for tile_size in (9, 1, 0.2, 0.02):
         if(fs<tile_size): continue
  
         ragrid=np.arange(cat['ra'].min(),cat['ra'].max(),tile_size)
@@ -235,6 +235,8 @@ if __name__ == "__main__":
         ra_grid, dec_grid = np.meshgrid(ra_index, dec_index)
         # Flatten the grids and stack them into a single array
         coords = np.stack((ra_grid.flatten(), dec_grid.flatten()), axis=1)
+
+        embed()
 
         for l, (ira, idec) in enumerate(coords):
             
