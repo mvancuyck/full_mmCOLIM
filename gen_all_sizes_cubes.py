@@ -225,6 +225,7 @@ if __name__ == "__main__":
     Nmax=200; 
     for tile_size in (9, 1, 0.2, 0.02):
         if(fs<tile_size): continue
+        
  
         ragrid=np.arange(cat['ra'].min(),cat['ra'].max(),tile_size)
         decgrid=np.arange(cat['dec'].min(),cat['dec'].max(),tile_size)
