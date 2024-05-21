@@ -195,10 +195,10 @@ def gen_maps(cat, simu,
         dict_Jg_int = powspec_LIMgal(f"{params_name}_"+line, f"{params_name}_"+line+'_all_lines', params_name+'_galaxies', output_path,
                                         line,  z, dz, n_slices, field_size, dkk)
         
-        if(gen_continuum and gen_interlopers):
+        #if(gen_continuum and gen_interlopers):
 
-            dict_Jg_int = powspec_LIMgal(f"{params_name}_"+line, f"{params_name}_"+line+'_full', params_name+'_galaxies', output_path,
-                                        line,  z, dz, n_slices, field_size, dkk)
+        #dict_Jg_int = powspec_LIMgal(f"{params_name}_"+line, f"{params_name}_"+line+'_full', params_name+'_galaxies', output_path,
+        #                            line,  z, dz, n_slices, field_size, dkk)
         
     return 0
 
