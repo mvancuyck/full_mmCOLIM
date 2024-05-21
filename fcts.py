@@ -46,7 +46,7 @@ def powspec_LIMgal(params, line, galaxy, path, J,  z, dz, n, field_size, dkk,
     elif('full' in line): with_interlopers = '_full'
     else: with_interlopers = ''
 
-    dict_pks_name = f'dict_dir/dict_LIMgal_{params}_{with_interlopers}.p'
+    dict_pks_name = f'dict_dir/dict_LIMgal_{params}{with_interlopers}.p'
     dico_exists = os.path.isfile(dict_pks_name)
     key_exists = False
     if(dico_exists): 
