@@ -12,10 +12,10 @@ freq_CII = 1900.53690000 * u.GHz
 freq_CI10 = 492.16 *u.GHz
 freq_CI21 = 809.34 * u.GHz
 rest_freq_list = [115.27120180  *u.GHz* J_up for J_up in range(1, 9)]
-#rest_freq_list.append(freq_CI10); rest_freq_list.append(freq_CI21); 
+rest_freq_list.append(freq_CI10); rest_freq_list.append(freq_CI21); 
 rest_freq_list.append(freq_CII); 
 line_list = ["CO{}{}".format(J_up, J_up - 1) for J_up in range(1, 9)]
-#line_list.append('CI10'); line_list.append('CI21'); 
+line_list.append('CI10'); line_list.append('CI21'); 
 line_list.append('CII_de_Looze')
 
 #Paralelisation on 24 nodes
