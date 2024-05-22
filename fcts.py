@@ -219,9 +219,9 @@ def compute_other_linear_model_params( params, line, path, J, rest_freq, z, dz, 
                 'LIM_shot':p_sn, 'LIM_shot_list':p_snlist,
                 "gal_shot":shot_gal, "gal_shot_list":snlist,
                 "LIMgal_shot":shot_cross_gal, "LIMgal_shot_list":sn_lineshotlist,
-                'k_angular':angular_k, 'pk_matter_2d':p2d, "Dc":Dc, "delta_Dc":delta_Dc}
-        #'beff_t10':beff_t10, 'beff_t10_list':bias_line_t10,
-        #"bgal_t10":beff_gal_t10, "bgal_t10_list":bias_t10,
+                'k_angular':angular_k, 'pk_matter_2d':p2d, "Dc":Dc, "delta_Dc":delta_Dc,
+                'beff_t10':beff_t10, 'beff_t10_list':bias_line_t10,
+                "bgal_t10":beff_gal_t10, "bgal_t10_list":bias_t10}
         
         if(not dico_exists): 
             print("save the dict")
