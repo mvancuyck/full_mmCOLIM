@@ -171,8 +171,8 @@ def gen_maps(cat, simu,
                     cube_interlopers += line_map 
                     cube_all_lines += line_map   
                     print(f'This map is interloped by {Jp}')
-                    #save_cube(output_path, f"{params_name}_{line}", f'{Jp}_interloper', "MJy_sr", cube_prop_dict, 'MJy per sr', cat_path, dz, cube=line_map)
-            if(line=='CO87'): 
+                    if('CI1' in Jp or 'CI2' in Jp): save_cube(output_path, f"{params_name}_{line}", f'{Jp}_interloper', "MJy_sr", cube_prop_dict, 'MJy per sr', cat_path, dz, cube=line_map)
+            if(Jp=='CO87'): 
                 save_cube(output_path, f"{params_name}_{line}", 'CO_all', "MJy_sr", cube_prop_dict, 'MJy per sr', cat_path, dz, cube=cube_interlopers)
                 save_cube(output_path, f"{params_name}_{line}", 'CO_interlopers', "MJy_sr", cube_prop_dict, 'MJy per sr', cat_path, dz, cube=cube_all_lines)
 
