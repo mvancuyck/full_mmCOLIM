@@ -11,61 +11,6 @@ from progress.bar import Bar
 import argparse
 from pysides.load_params import *
  
-
-def co_sled_from_nsubfields(i_ref,n_slices,dz, res, field_size, ksimu,colors, interlopers = None, allpoints=False):
-    #---------------------------
-    SLED_mes = np.zeros((12, len(z_list), 9, 2)) #12 subfields, redshift, ref+8lines, mean and std
-    patchs = []
-    #for each redshift and subfield: 
-    for z, zi, c in zip(z_list, range(len(z_list)), colors ):
-        for nfield in range(12):
-            #Load the name of the subfield
-            simuu, cat, cat_path, field_size = load_9deg_subfield(nfield, load_cat = False)
-            #-----------------
-            #Load the dicts for transition of reference 
-            line_noint = f"{simuu}_z{z}_dz{np.round(dz,3)}_{n_slices}slices_{field_size}deg2_{line_list[i_ref]}"
-            galaxy = f"{simuu}_z{z}_dz{np.round(dz,3)}_{n_slices}slices_{field_size}deg2_galaxies_{line_list[i_ref]}"
-            dict_Jg_noint = powspec_LIMgal(                    line_noint, line_noint, galaxy,output_path, line_list[i_ref],  z, dz, n_slices, field_size, dll)
-            dict_J        = compute_other_linear_model_params( line_noint, line_noint, output_path, line_list[i_ref], rest_freq_list[i_ref], z, dz, n_slices, field_size, cat, dict_Jg_noint)
-            #-----------------                
-            #Without interlopers
-            if(interlopers == None): line =  line_noint; dict_Jg = dict_Jg_noint 
-            else: line = line_noint + f'_{interlopers}'; dict_Jg = powspec_LIMgal(line, line, galaxy,output_path,  line_list[i_ref],  z, dz, n_slices, field_size, dll)
-            #-----------------
-            #Get the scales
-            k_matter_3D = (dict_Jg["k"].to(u.rad**-1) * 2 * np.pi  /  dict_J["Dc"]).value
-            w = np.where( k_matter_3D <= ksimu)
-            k_a = w[0][0]; k_e =  w[0][-1]
-            if(k_e <= 1):  k_e = 2
-            if(allpoints): born = [0,-1]
-            else: born = [int(k_a),int(k_e+1)]
-            intK, slopeK = print_scientific_notation( np.mean(k_matter_3D[k_e]) )
-            #create patchs for legend
-            if(nfield ==0):
-                patch = mpatches.Patch(color=c, label=f'z={z}')#+"@k$\\leq$"+f"({intK}"+r"$\times$"+r"$10^{-1}$)"+r"$ \rm Mpc^{-1}$")
-                patchs.append(patch)
-            #Get the power spectrum's mean and dispersion for the line of reference
-            SLED_mes[nfield, zi, 0, 0] = (dict_Jg['pk_J-gal'][0][born[0]:born[1]].value - dict_J["LIMgal_shot"][0].value).mean()
-            SLED_mes[nfield, zi, 0, 1] = (dict_Jg['pk_J-gal'][0][born[0]:born[1]].value - dict_J["LIMgal_shot"][0].value).std()
-            pk_ref                     = (dict_Jg['pk_J-gal'][0][born[0]:born[1]].value - dict_J["LIMgal_shot"][0].value).mean()
-            #----------------
-            #Get the power spectrum's mean and dispersion for the line of reference
-            for j, J, rest_freq in zip(np.arange(8), line_list[:8], rest_freq_list[:8]):
-                line_noint = f"{simuu}_z{z}_dz{np.round(dz,3)}_{n_slices}slices_{field_size}deg2_{J}"
-                galaxy = f"{simuu}_z{z}_dz{np.round(dz,3)}_{n_slices}slices_{field_size}deg2_galaxies_{J}"
-                dict_J = compute_other_linear_model_params( line_noint, line_noint, output_path, J, rest_freq, z, dz, n_slices, field_size, cat, dict_Jg_noint)
-                if(interlopers == None): line = line_noint
-                else:                    line = line_noint + f'_{interlopers}'
-                dict_Jg = powspec_LIMgal(line, line, galaxy,output_path, J,  z, dz, n_slices, field_size, dll)
-                SLED_mes[nfield, zi, j+1, 0] = (dict_Jg['pk_J-gal'][0][born[0]:born[1]].value - dict_J["LIMgal_shot"][0].value).mean()
-                SLED_mes[nfield, zi, j+1, 1] = (dict_Jg['pk_J-gal'][0][born[0]:born[1]].value - dict_J["LIMgal_shot"][0].value).std()
-                
-    return patchs, SLED_mes
-
-
-
-
-
 def compute_sled_cat(z_list, dz_list, simu = 'uchuu', recompute = False):
     #choose the type of frequency interval: fixe for one transition of fix redshift interval for all transitions
     if(recompute):
@@ -146,53 +91,61 @@ def compute_sled_cat(z_list, dz_list, simu = 'uchuu', recompute = False):
 
     return all_I, ms_I, sb_I
 
-
 def plot_sled_fig(z_list, dz_list, recompute_sleds):
+
     '''
     Change the ref CO transition by hand!!!
     '''
 
     I_dict, ms_I, sb_I = compute_sled_cat(z_list, dz_list, simu = 'bolshoi', recompute = recompute_sleds)
+    SLED_mes = co_sled_from_nsubfields(2, z_list, dz_list, 9, 0.15)
 
     for idz, dz in enumerate(dz_list):
 
+        if(dz==0.3): continue
+
         BS=10; plt.rc('font', size=BS); plt.rc('axes', titlesize=BS); plt.rc('axes', labelsize=BS); lw=1; mk=5; elw=1
-        fig = plt.figure(figsize=(4,4), dpi=200) 
-        gs = gridspec.GridSpec(2, 1, height_ratios=[2, 1]); ax = plt.subplot(gs[0]);  axr = plt.subplot(gs[1])
+        fig, (ax, axr) = plt.subplots(2, 1, sharex=True, sharey = 'row', gridspec_kw={'height_ratios': [2,1]}, figsize=(4,4), dpi = 200)
 
         patchs = []
         patch = mlines.Line2D([], [], color='k', linestyle='solid',  label='Mean SLED')
         patchs.append(patch)
-        patch = mlines.Line2D([], [], color='k', linestyle='None', marker='*', label=f'from cross-power spectra')
+        patch = mlines.Line2D([], [], color='k', linestyle='None', marker='x', label=f'from cross-power \n spectra')
         patchs.append(patch)
 
+
         #--- SLED from Catalog ---
-        for zi, (z, c) in enumerate(zip(z_list, cm.copper(np.linspace(0,0.8,len(z_list))) )):
+        for zi, (z, dzplot, c) in enumerate(zip(z_list, (-0.2, -0.1, 0, 0.1, 0.2), cm.copper(np.linspace(0,0.8,len(z_list))) )):
             J_list = np.arange(I_dict.shape[2])+1
             N=6; M=N+1
+
+            Dzplot = np.asarray((dzplot,dzplot,dzplot,0,0,0,0,0))
+            ax.errorbar(J_list+Dzplot, np.mean(SLED_mes[:, zi, idz, 1:], axis=0), yerr=np.std(SLED_mes[:, zi, idz, 1:], axis=0), 
+                        fmt='x', color=c, ecolor=c, lw=1)
+
             ax.errorbar(     J_list, I_dict[zi, idz, :,N], color=c, ecolor=c, lw=1)
-            
             ax.fill_between( J_list, I_dict[zi, idz, :,N] - I_dict[zi, idz, :, M], 
                                      I_dict[zi, idz, :,N] + I_dict[zi, idz, :, M], 
                                      color=c, alpha=0.3 )
-        #---------------------------
+            
+            axr.errorbar(J_list+dzplot, np.mean(SLED_mes[:, zi, idz, 1:], axis=0) / I_dict[zi, idz, :,N]-1, 
+                         yerr=np.std(SLED_mes[:, zi, idz, 1:], axis=0) / I_dict[zi, idz, :,N], fmt='x', c=c)
 
-        ax.set_ylabel(r"$ \rm R_\mathrm{J-3} = I_{CO(J-J-1)}/I_{CO(3-2)} $")
-        ax.set_xlim(0.5, 8.5)
-        ax.set_ylim(0.2, 2.5)
-        ax.legend(handles = patchs, loc= 'upper left',fontsize=5) #4.5
+            patch = mpatches.Patch(color=c, label=f'z={z}')
+            patchs.append(patch)
         #---------------------------
-        ax = plt.subplot(gs[1])
-        ax.plot((0,9), np.zeros(2), c='grey', lw=lw)
-        ax.set_ylabel("relative difference")
-        ax.set_xlabel(r"Quantum rotational number J")
-        ax.set_xlim(0.5, 8.5)
-        ax.set_ylim(-0.2,1.6)        
-        ax.tick_params(axis = "x", which='major', tickdir = "inout", top = True, color='k')
+        ax.set_ylabel(r"$ \rm R_\mathrm{J_{up}-3} = I_{CO(J_{up}-J_{up}-1)}/I_{CO(3-2)} $")
+        ax.legend(handles = patchs, loc= 'upper right',fontsize=5, frameon = False) #4.5
+        ax.set_ylim(0,3)
         #---------------------------
+        axr.set_ylim(-0.5,1)
+        axr.plot((0,9), np.zeros(2), c='grey', lw=lw)
+        axr.set_ylabel("relative \n difference")
+        axr.set_xlabel("Quantum rotational number $\\rm J_{up}$")
+        axr.set_xlim(0.5, 8.5)
+        axr.tick_params(axis = "x", which='major', tickdir = "inout", top = True, color='k')
         fig.tight_layout(); fig.subplots_adjust(hspace=.0)
         for extension in ("png", "pdf"): plt.savefig(f"figs/sled_dz{dz}.{extension}", transparent=True)
-
 
 def contrib_ms_sb(z_list, dz_list, recompute_sleds): 
 
@@ -219,6 +172,51 @@ def contrib_ms_sb(z_list, dz_list, recompute_sleds):
         
     plt.show()
 
+def co_sled_from_nsubfields(i_ref, z_list, dz_list, field_size, klim, 
+                            n_slices = 0, interlopers = None, allpoints=False, dtype='_with_interlopers'):
+    
+    #---------------------------
+    SLED_mes = np.zeros((12, len(z_list), len(dz_list), 9)) #12 subfields, redshift, redshift width, ref+8lines
+    #for each redshift and subfield: 
+    for idz, dz in enumerate(dz_list):
+        for zi, z in enumerate(z_list):
+            for nfield in range(12):
+                #-----------------
+                #Load the dicts for transition of reference 
+                file = f"dict_dir/dict_LIMgal_pySIDES_from_uchuu_ntile_{nfield}_z{z}_dz{dz}_0.0slices_{field_size}deg2_{line_list[i_ref]}{dtype}.p"
+                dict= pickle.load( open(file, 'rb'))
+
+                file = f"dict_dir/dict_LIMgal_pySIDES_from_uchuu_ntile_{nfield}_z{z}_dz{dz}_0.0slices_{field_size}deg2_{line_list[i_ref]}.p"
+                d = pickle.load( open(file, 'rb'))
+
+                #-----------------
+                #Get the scales
+                K = (dict["k"].to(u.rad**-1) * 2 * np.pi  /  d["Dc"]).value
+                w = np.where( K <= klim)
+                k_a = w[0][0]; k_e =  w[0][-1]
+                if(k_e <= 1):  k_e = 2
+                if(allpoints): born = [0,-1]
+                else: born = [int(k_a),int(k_e+1)]
+
+                intK, slopeK = print_scientific_notation( np.mean(K[k_e]) )
+                #create patchs for legend
+            
+                #Get the power spectrum's mean and dispersion for the line of reference
+                ref = (dict['pk_J-gal'][0][born[0]:born[1]].value - d["LIMgal_shot"][0].value).mean()
+                SLED_mes[nfield, zi, idz, 0] = ref
+                #----------------
+                #Get the power spectrum's mean and dispersion for the line of reference
+                
+                for j, (J, rest_freq) in enumerate(zip(line_list[:8], rest_freq_list[:8])):
+
+                    file = f"dict_dir/dict_LIMgal_pySIDES_from_uchuu_ntile_{nfield}_z{z}_dz{dz}_0.0slices_{field_size}deg2_{J}{dtype}.p"
+                    dict = pickle.load( open(file, 'rb'))
+                    file = f"dict_dir/dict_LIMgal_pySIDES_from_uchuu_ntile_{nfield}_z{z}_dz{dz}_0.0slices_{field_size}deg2_{J}.p"
+                    dict = pickle.load( open(file, 'rb'))
+                    SLED_mes[nfield, zi, idz, j+1] = (dict['pk_J-gal'][0][born[0]:born[1]].value - d["LIMgal_shot"][0].value).mean() / ref
+                
+    return SLED_mes
+
     
 if __name__ == "__main__":
 
@@ -234,8 +232,8 @@ if __name__ == "__main__":
     dz_list = tim_params['dz_list']
     n_list = tim_params['n_list']
 
-    if(False):
+    if(True):
         plot_sled_fig(z_list, dz_list, args.recompute_sleds)
         plt.show()
 
-    contrib_ms_sb(z_list, dz_list, args.recompute_sleds)
+    if(False): contrib_ms_sb(z_list, dz_list, args.recompute_sleds)
