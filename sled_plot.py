@@ -135,7 +135,7 @@ def plot_sled_fig(z_list, dz_list, recompute_sleds):
             patchs.append(patch)
         #---------------------------
         ax.set_ylabel(r"$ \rm R_\mathrm{J_{up}-3} = I_{CO(J_{up}-J_{up}-1)}/I_{CO(3-2)} $")
-        ax.legend(handles = patchs, loc= 'upper right',fontsize=5, frameon = False) #4.5
+        ax.legend(handles = patchs, loc= 'upper left',fontsize=6, frameon = False) #4.5
         ax.set_ylim(0,3)
         #---------------------------
         axr.set_ylim(-0.5,1)
@@ -202,18 +202,36 @@ def co_sled_from_nsubfields(i_ref, z_list, dz_list, field_size, klim,
                 #create patchs for legend
             
                 #Get the power spectrum's mean and dispersion for the line of reference
-                ref = (dict['pk_J-gal'][0][born[0]:born[1]].value - d["LIMgal_shot"][0].value).mean()
+                ref_k = (dict['pk_J-gal'][0][born[0]:born[1]].value - d["LIMgal_shot"][0].value)
+                w = np.where(ref_k>0)
+                ref = np.mean(ref_k[w])
+
                 SLED_mes[nfield, zi, idz, 0] = ref
                 #----------------
                 #Get the power spectrum's mean and dispersion for the line of reference
-                
+                if(False):
+                    plt.loglog(dict["k"].to(u.arcmin**-1), dict['pk_J-gal'][0].value - d["LIMgal_shot"][0].value, 'r')
+                    plt.loglog(dict["k"].to(u.arcmin**-1), d['pk_J-gal'][0].value    - d["LIMgal_shot"][0].value, 'g')
+                    plt.loglog(dict["k"].to(u.arcmin**-1)[born[0]:born[1]][w], ref_k[w], 'ob')
+                    plt.show()
+
                 for j, (J, rest_freq) in enumerate(zip(line_list[:8], rest_freq_list[:8])):
 
                     file = f"dict_dir/dict_LIMgal_pySIDES_from_uchuu_ntile_{nfield}_z{z}_dz{dz}_0.0slices_{field_size}deg2_{J}{dtype}.p"
                     dict = pickle.load( open(file, 'rb'))
                     file = f"dict_dir/dict_LIMgal_pySIDES_from_uchuu_ntile_{nfield}_z{z}_dz{dz}_0.0slices_{field_size}deg2_{J}.p"
-                    dict = pickle.load( open(file, 'rb'))
-                    SLED_mes[nfield, zi, idz, j+1] = (dict['pk_J-gal'][0][born[0]:born[1]].value - d["LIMgal_shot"][0].value).mean() / ref
+                    d = pickle.load( open(file, 'rb'))
+                    pk = dict['pk_J-gal'][0][born[0]:born[1]].value - d["LIMgal_shot"][0].value
+                    w = np.where(pk>0)
+                    SLED_mes[nfield, zi, idz, j+1] = (pk[w]).mean() / ref
+
+                    if(False):
+                        plt.loglog(dict["k"].to(u.arcmin**-1), dict['pk_J-gal'][0].value - d["LIMgal_shot"][0].value, 'r')
+                        plt.loglog(d["k"].to(u.arcmin**-1), d['pk_J-gal'][0].value    - d["LIMgal_shot"][0].value, 'g')
+                        plt.loglog(dict["k"].to(u.arcmin**-1)[born[0]:born[1]][w], (dict['pk_J-gal'][0][born[0]:born[1]].value - d["LIMgal_shot"][0].value)[w], 'ob')
+                plt.show()
+
+
                 
     return SLED_mes
 
