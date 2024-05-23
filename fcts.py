@@ -212,6 +212,7 @@ def compute_other_linear_model_params( params, line, path, J, rest_freq, z, dz, 
         beff_gal_t10 = ( np.asarray(bias_t10).mean(), np.asarray(bias_t10).std() )
         #------
         
+        
         dict = {'species':J,
                 'z':z, 'dz':dz,
                 'cube':f"{path}/{line}_MJy_sr.fits",   
