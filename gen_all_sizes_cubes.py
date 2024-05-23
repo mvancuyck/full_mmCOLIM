@@ -71,10 +71,10 @@ def make_all_cubes(cat, simu, field_size, cat_path,line, rest_freq, ncpus=24):
     n_list = tim_params['n_list']
     
     params_list = []
-    #for n in n_list:
-    for z in z_list:
-        for dz in dz_list: 
-            params_list.append( list((z,dz,0 ))) 
+    for n in n_list:
+        for z in z_list:
+            for dz in dz_list: 
+                params_list.append( list((z,dz,n ))) 
                 
     print("start parallelization")
     with Pool(ncpus, initializer=worker_init, initargs=list((cat, simu, field_size, cat_path,line, rest_freq ))) as p:
