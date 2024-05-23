@@ -234,6 +234,7 @@ def compute_other_linear_model_params( params, line, path, J, rest_freq, z, dz, 
 
     return dict 
 # -------------------------------------------------------------------------------------------------------------
+'''
 
 def gen_linear_noise(freqs, dnu, pix_size, pixel_sr, ny,nx, sensitivity_file = '/home/mvancuyck/sides/PYSIDES/pysides/CONCERTO_SENSITIVITY/SIDES_sensitivity_1Ghz_res.txt', reduction_factor = 1):
     #load the sensitivity file
@@ -252,6 +253,7 @@ def gen_linear_noise(freqs, dnu, pix_size, pixel_sr, ny,nx, sensitivity_file = '
         noise_cube.append(noise_slice)
     return np.asarray(noise_cube)
 
+'''
 
 def get_2d_pk_matter(z, nu_obs, dnu):
     
