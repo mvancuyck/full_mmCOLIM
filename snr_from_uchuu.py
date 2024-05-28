@@ -4,9 +4,9 @@ import pickle
 import astropy.units as u
 from astropy.io import fits
 import scipy.constants as cst
-from gen_cube_co_paper import *
+from gen_all_sizes_cubes import *
 from astropy.stats import gaussian_fwhm_to_sigma
-from fct_co_paper import *
+from fcts import *
 from astropy.cosmology import Planck15 as cosmo
 from functools import partial
 import powspec
@@ -183,20 +183,20 @@ def plot_results(title, simu, z, dz, line, t_survey,  SNR_J, SNR_JG, Nmode, k_3d
 
     return 0
 
-def main_paper(simu, cat, field_size, field_size_concerto, line, rest_freq, z, dz, t_survey, npix, 
+def main_paper(simu, cat, simu_field_size, field_size_survey, line, rest_freq, z, dz, t_survey, npix, 
                dtype="all_lines", n_slices=0.0, dnu = 1.5*u.GHz, plot_map=False):
 
-    line_noint = f"{simu}_z{z}_dz{np.round(dz,3)}_{n_slices}slices_{field_size}deg2_{line}"
-    galaxy = f"{simu}_z{z}_dz{np.round(dz,3)}_{n_slices}slices_{field_size}deg2_galaxies_{line}"
 
-    map = fits.getdata(f"{output_path}/{line_noint}_MJy_sr.fits")
-    dict_Jg_noint = powspec_LIMgal(line_noint, line_noint, galaxy, output_path, line,  z, dz, n_slices, field_size, dkk)
-    dict_J = compute_other_linear_model_params( line_noint, line_noint, output_path, line, rest_freq_list[int(line[-1])], z, dz, n_slices, field_size, cat, dict_Jg_noint)
+    #Load the dicts for transition of reference 
+    file = f"dict_dir/dict_LIMgal_{simu}_z{z}_dz{np.round(dz,3)}_{n_slices}slices_{simu_field_size}deg2_{line}{dtype}.p"
+    dict= pickle.load( open(file, 'rb'))
+    file = f"dict_dir/dict_LIMgal_{simu}_z{z}_dz{np.round(dz,3)}_{n_slices}slices_{simu_field_size}deg2_{line}.p"
+    d = pickle.load( open(file, 'rb'))
 
     #-----------------             
     #Without interlopers
     if(plot_map): 
-        hdul = fits.open(f'{output_path}/{line_noint}_MJy_sr.fits')
+        hdul = fits.open(f'{output_path}/{simu}_z{z}_dz{np.round(dz,3)}_{n_slices}slices_{simu_field_size}deg2_{line}_MJy_sr.fits')
         data_cube = hdul[0].data  
         wcs_cube = wcs.WCS(hdul[0].header)
         data_slice = np.abs(data_cube[0, :, :])+1e-5
@@ -211,46 +211,41 @@ def main_paper(simu, cat, field_size, field_size_concerto, line, rest_freq, z, d
         ax.set_xlabel('RA (deg)')
         ax.set_ylabel('Dec (deg)')
         #fig.tight_layout()
-    
-    line_type = line_noint + f'_{dtype}'
-    dict_Jg = powspec_LIMgal(line_type, line_type, galaxy, output_path, line, z, dz, n_slices, field_size, dkk, recompute= True) 
-    pkJ_interlopers = np.abs(dict_Jg['pk_J_0'])
-    pkJG_interlopers = (np.abs(dict_Jg['pk_J-gal_0']) * u.sr).to(u.Jy)
     #-----------------
     
-    zmin = z-dz/2
-    zmax = z+dz/2
+    zmin = z-dz/2 ##!!
+    zmax = z+dz/2 ##!!
     freq_obs = rest_freq/(1+z)
-    Dnu = dz * freq_obs/(1+z)
-    NEI_MJy_sr, NEFD_Jy_beam, Omega_beam = sensitivity(Dnu, freq_obs, dnu)
-    Dc, delta_Dc, pk_3d_to_2d, k_3d_to_2d, full_volume_covered = cosmo_distance(z, Dnu, freq_obs, zmin, zmax)
+    Dnu = dz * freq_obs/(1+z) ##!!
+    NEI_MJy_sr, NEFD_Jy_beam, Omega_beam = sensitivity(Dnu, freq_obs, dnu) ##!!
+    Dc, delta_Dc, pk_3d_to_2d, k_3d_to_2d, full_volume_covered = cosmo_distance(z, Dnu, freq_obs, zmin, zmax)##!!
     #
-    Vpix    = volume(Omega_beam,                   Dc, z, freq_obs, Dnu) 
-    Vsurvey = volume(field_size_concerto*u.deg**2, Dc, z, freq_obs, dnu, full_volume_covered)
-    t_obs = t_survey *  npix * Omega_beam.to(u.deg**2).value / field_size_concerto
+    Vpix    = volume(Omega_beam, Dc, z, freq_obs, Dnu) ##!!
+    Vsurvey = field_size_survey.to(u.sr) * full_volume_covered / (4*np.pi)
+    t_obs = t_survey *  npix * Omega_beam.to(u.deg**2) / field_size_survey.to(u.deg**2)
     Pk_noise = (Vpix * NEI_MJy_sr**2/ t_obs).to(u.Jy**2/u.sr**2*u.Mpc**3) 
 
-    pkJ =   np.abs(dict_Jg_noint['pk_J_0'])
-    pkG =         (dict_Jg_noint['pk_gal_0']*u.sr**2).to(u.sr)
-    pkJG = (np.abs(dict_Jg_noint['pk_J-gal_0']) * u.sr).to(u.Jy)
+    pkJ =   np.abs(d['pk_J_0'])
+    pkG =         (d['pk_gal_0']*u.sr**2).to(u.sr)
+    pkJG = (np.abs(d['pk_J-gal_0']) * u.sr).to(u.Jy)
     pkJ_3d  = (pkJ   / pk_3d_to_2d).to(u.Jy**2/u.sr**2*u.Mpc**3)
     pkG_3d  = (pkG   / pk_3d_to_2d).to(u.Mpc**3)
     pkJG_3d = (pkJG  / pk_3d_to_2d).to(u.Jy/u.sr*u.Mpc**3)
     
-    snJ = dict_J['LIM_shot_list'][0]
-    snG = dict_J['gal_shot_list'][0]*u.sr
-    snJG = (dict_J['LIMgal_shot_list'][0]  * u.sr).to(u.Jy)
+    snJ = d['LIM_shot_list'][0]
+    snG = d['gal_shot_list'][0]*u.sr
+    snJG = (d['LIMgal_shot_list'][0]  * u.sr).to(u.Jy)
     snJ_3d  = (snJ   / pk_3d_to_2d).to(u.Jy**2/u.sr**2*u.Mpc**3)
     snG_3d  = (snG   / pk_3d_to_2d).to(u.Mpc**3)
     snJG_3d  = (snJG / pk_3d_to_2d).to(u.Jy/u.sr*u.Mpc**3)
     
-    res = dict_Jg_noint['res']
-    k   = dict_Jg_noint['k']#.to(u.rad**-1)
+    res = d['res']
+    k   = d['k']#.to(u.rad**-1)
     K   = k.to(u.rad**-1)/k_3d_to_2d #Mpc^-1
-    delta_k = np.diff(dict_Jg_noint["kbin"]) 
+    delta_k = np.diff(d["kbin"]) ##!!
     delta_K = delta_k.to(u.rad**-1)/k_3d_to_2d #Mpc^-1
     Nmode = 2 * np.pi * (K**2 * delta_K) * Vsurvey/ (2 * np.pi)**3
-    kmax_concerto = (1/np.sqrt(field_size_concerto*u.deg**2).to(u.rad)).to(1/u.arcmin)
+    kmax = (1/np.sqrt(field_size_survey).to(u.rad)).to(1/u.arcmin)
     Klim = (1.8e-1/u.Mpc) #1.35
     klim = (Klim*k_3d_to_2d).to(1/u.arcmin)
 
@@ -264,11 +259,11 @@ def main_paper(simu, cat, field_size, field_size_concerto, line, rest_freq, z, d
 
     SNR_JG = SNR_fct(pkJG_3d[:w], sigma_JG[:w])
 
-    plot_results(f"{simu}_z{z}_dz{np.round(dz,3)}_{n_slices}slices_{field_size}deg2_{line}", 
+    plot_results(f"{simu}_z{z}_dz{np.round(dz,3)}_{n_slices}slices_{simu_field_size}deg2_{line}", 
                 simu, z, dz, line, t_survey, SNR_J, SNR_JG, Nmode,
                 k_3d_to_2d, pk_3d_to_2d, 
                 k, pkJ, snJ, sigma_J, pkG, snG, pkJG, snJG, sigma_JG, pkJG_interlopers,  
-                klim, kmax_concerto, Pk_noise, pkJ_interlopers)
+                klim, kmax, Pk_noise, pkJ_interlopers)
 
     return k, pkJ, snJ, pkG, snG, pkJG, snJG
         
@@ -285,13 +280,49 @@ if __name__ == "__main__":
     #Otherwise, load directly the results in the .p file, 
     cat=None
     #_, cat, _, _ = load_cat()
-    npix = int(2152*0.725)
 
-    for dz in dz_list: 
+    #With SIDES Bolshoi, for rapid tests. 
+    tim_params = load_params('PAR/cubes.par')
+    z_list = tim_params['z_list']
+    dz_list = tim_params['dz_list']
+    n_list = tim_params['n_list']
+
+    CONCERTO = {'npix':int(2152*0.725),
+               'Omega_field':1.5*u.deg**2,
+               't_survey': 600,
+               'spectral_resolution':1.5,
+               'FWHM':30,
+                }
+
+    for nslice, dz in zip(n_list,dz_list): 
         
         dict = {}
         for line, rest_freq in zip(line_list[2:5],rest_freq_list[2:5]):
-            k, pkJ, snJ, pkG, snG, pkJG, snJG = main_paper('pySIDES_from_uchuu', cat, 117, 1.5, line, rest_freq, 1.0, dz, 600, npix)
+            k, pkJ, snJ, pkG, snG, pkJG, snJG = main_paper('pySIDES_from_uchuu', cat, 117, 
+                                                           CONCERTO['Omega_field'], line, rest_freq, 
+                                                           1.0, dz, CONCERTO['t_survey'], 
+                                                           CONCERTO['npix'], n_slices=nslice, 
+                                                           dnu=CONCERTO['spectral_resolution'])
+
+        dict = {}
+        for line, rest_freq in zip(line_list[2:4],rest_freq_list[2:4]):        
+            k, pkJ, snJ, pkG, snG, pkJG, snJG = main_paper('pySIDES_from_uchuu', cat, 117, 
+                                                           CONCERTO['Omega_field'], line, rest_freq, 
+                                                           1.5, dz, CONCERTO['t_survey'], CONCERTO['npix'], 
+                                                           n_slices=nslice, dnu=CONCERTO['spectral_resolution'])
+        
+    plt.show()
+    
+
+
+
+
+
+
+
+
+
+    '''
             dict[f'pk_auto_{line}_tot'] = pkJ
             dict[f'auto_shot_noise_{line}']  = snJ
             dict[f'pk_cross_gal-{line}_tot'] = pkG
@@ -300,22 +331,4 @@ if __name__ == "__main__":
         dict[f'auto_shot_noise_galaxies'] = snG
         dict['k_per_arcmin'] = k
         pickle.dump(dict, open(f'power_spectra_in_pySIDES_from_uchuu_50arcsec_resolution_at_z1.0_in_1slice_of_dz{dz}_no_interlopers.p', 'wb'))
-        
-        dict = {}
-        for line, rest_freq in zip(line_list[2:4],rest_freq_list[2:4]):        
-            k, pkJ, snJ, pkG, snG, pkJG, snJG = main_paper('pySIDES_from_uchuu', cat, 117, 1.5, line, rest_freq, 1.5, dz, 600, npix)
-            dict[f'pk_auto_{line}_tot'] = pkJ
-            dict[f'auto_shot_noise_{line}']  = snJ
-            dict[f'pk_cross_gal-{line}_tot'] = pkG
-            dict[f'cross_shot_noise_gal-{line}'] = snJG
-        dict[f'pk_auto_galaxies_tot'] = pkG
-        dict[f'auto_shot_noise_galaxies'] = snG
-        dict['k_per_arcmin'] = k
-        pickle.dump(dict, open(f'power_spectra_in_pySIDES_from_uchuu_50arcsec_resolution_at_z1.5_in_1slice_of_dz{dz}_no_interlopers.p', 'wb'))
-        
-    plt.show()
-    
-
-    #---
-    #Problem so far in this SNR. 
-    #my_main('pySIDES_from_uchuu', cat, 117, 1.5, line_list[2], rest_freq_list[2], 1.0, 0.05, 600)
+    '''
