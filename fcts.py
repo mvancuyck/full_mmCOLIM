@@ -282,7 +282,6 @@ def cosmo_distance(z, dnu, nu_obs):
     full_volume_at_z = 4/3*np.pi*(Dc_max**3-Dc_min**3)
     return Dc, delta_Dc, pk_3d_to_2d.to(u.sr/u.Mpc**3), k_3d_to_2d, full_volume_at_z
 
-
 def volume(omega, Dc, z, nu_obs, dnu, full_volume_at_z=None):
     c = cst.c*1e-3*u.km/u.s
     y = (c / cosmo.H(z)) * (1+z)**2  / (nu_obs.to(u.GHz)*(1+z))
