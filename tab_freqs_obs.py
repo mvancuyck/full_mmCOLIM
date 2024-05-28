@@ -11,8 +11,8 @@ import argparse
 from pysides.load_params import *
 
 line_list_fancy = ["CO({}-{})".format(J_up, J_up - 1) for J_up in range(1, 9)]
-rest_freq_list = [115.27120180 J_up for J_up in range(1, 9)]
-dz=0.1
+rest_freq_list = [115.27120180 * J_up for J_up in range(1, 9)]
+dz=0.05
 
 
 print(r'\begin{table}[h!]')
@@ -31,7 +31,7 @@ print(L+r'\\')
 print(Lp+r'\\')
 print(r'\hline')
 print(r'\noalign{\smallskip}')
-for line, rest_freq in zip(line_list_fancy, rest_freq):
+for line, rest_freq in zip(line_list_fancy, rest_freq_list):
     L = line
     for z in (0.0, 0.5, 1.0, 1.5, 2.0,2.5,3.0):
         nu_obs = rest_freq/(1+z)
@@ -42,28 +42,32 @@ print(r'\hline')
 print(r'\end{tabular}}')
 print(r'\end{table}')
 
+print('')
+print('')
+
+
 print(r'\begin{table}[h!]')
 print(r'\centering')
-print(r'\caption{Table of corresponding frequency interval (in GHz) to d$z$={dz} for each transition \jup\,.}')
+print(r'\caption{Table of corresponding frequency interval (in GHz) to'+f' d$z$={dz}'+r' for each transition \jup\,.}')
 print(r'\small{\begin{tabular}{p{0.1\linewidth}cccccc}')
 print(r'\hline')
 print(r'\hline')
 print(r'\noalign{\smallskip}')
-L = 'Line & '
-Lp = ' & '
+L = 'Line '
+Lp = ' '
 for z in (0.5, 1.0, 1.5, 2.0,2.5,3.0):
-    L+=' & $\rm d\nu$'
+    L+=r' & $\rm d\nu$'
     Lp+= f' & z={z}'
 print(L+r'\\')
 print(Lp+r'\\')
 print(r'\hline')
 print(r'\noalign{\smallskip}')
-for line, rest_freq in zip(line_list_fancy, rest_freq):
+for line, rest_freq in zip(line_list_fancy, rest_freq_list):
     L = line
-    for z in (0.5, 1.0, 1.5, 2.0,2.5,3.0):
+    for z in (0.5, 1.0, 1.5, 2.0, 2.5, 3.0):
         nu_obs = rest_freq/(1+z)
-        dnu = dz* nu_obs / 1+z
-        L+= f' & {np.round(dz, 1)}'
+        dnu = dz * nu_obs  / (1+z)
+        L+= f' & {np.round(dnu, 1)}'
     print(L+r'\\')
     print(r'\noalign{\smallskip}')
 print(r'\hline')
