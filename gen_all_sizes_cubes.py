@@ -222,6 +222,9 @@ if __name__ == "__main__":
     cat = cat.to_pandas()
     simu='pySIDES_from_bolshoi'; fs=2
     '''
+
+    for J, rest_freq in zip(line_list, rest_freq_list):
+        make_all_cubes(cat, simu, fs, dirpath, line=J,rest_freq = rest_freq.value )
     
     Nmax=200; 
     for tile_size in (9, 1, 0.2, 0.3):
@@ -246,6 +249,5 @@ if __name__ == "__main__":
                 make_all_cubes(cat_subfield, f"{simu}_ntile_{l}", tile_size, dirpath, line=J, rest_freq = rest_freq.value )
                 #gen_maps(cat_subfield, f"{simu}_ntile_{l}", 0.64, 0, 0.22, tile_size, dirpath, line=J,rest_freq = rest_freq.value)
 
-    for J, rest_freq in zip(line_list, rest_freq_list):
-        make_all_cubes(cat, simu, fs, dirpath, line=J,rest_freq = rest_freq.value )
+
     
