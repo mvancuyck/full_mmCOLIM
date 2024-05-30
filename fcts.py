@@ -255,7 +255,7 @@ def gen_linear_noise(freqs, dnu, pix_size, pixel_sr, ny,nx, sensitivity_file = '
 
 '''
 
-def get_2d_pk_matter(z, nu_obs, dnu):
+def get_2d_pk_matter(z, nu_obs, dnu,  ):
     
     pars = camb.read_ini("planck2018.ini")
     pars.set_matter_power(redshifts=[z], kmax=100)
@@ -271,10 +271,10 @@ def get_2d_pk_matter(z, nu_obs, dnu):
 
     return angular_k, p2d, Dc, delta_Dc
 
-def cosmo_distance(z, dnu, nu_obs):
+def cosmo_distance(z, dnu, nu_obs, zmin, zmax,):
     dz = dnu * (1+z) / nu_obs
-    Dc_min = cosmo.comoving_distance(z-dz/2)
-    Dc_max = cosmo.comoving_distance(z+dz/2)
+    Dc_min = cosmo.comoving_distance(zmin)
+    Dc_max = cosmo.comoving_distance(zmax)
     Dc =  cosmo.comoving_distance(z)/u.rad
     delta_Dc = ( (cst.c*1e-3*u.km/u.s) * (1+z) * dnu / cosmo.H(z) / nu_obs)
     pk_3d_to_2d = 1/(Dc**2*delta_Dc)
@@ -282,11 +282,10 @@ def cosmo_distance(z, dnu, nu_obs):
     full_volume_at_z = 4/3*np.pi*(Dc_max**3-Dc_min**3)
     return Dc, delta_Dc, pk_3d_to_2d.to(u.sr/u.Mpc**3), k_3d_to_2d, full_volume_at_z
 
-def volume(omega, Dc, z, nu_obs, dnu, full_volume_at_z=None):
+def volume(omega, Dc, z, nu_obs, dnu):
     c = cst.c*1e-3*u.km/u.s
     y = (c / cosmo.H(z)) * (1+z)**2  / (nu_obs.to(u.GHz)*(1+z))
-    if(full_volume_at_z is None): volume = (Dc**2).to(u.Mpc**2/u.sr)*(omega).to('sr') * y * dnu
-    else:                         volume = omega.to(u.sr) * full_volume_at_z/4/np.pi/u.sr
+    volume = (Dc**2).to(u.Mpc**2/u.sr)*(omega).to('sr') * y * dnu
     return volume
 
 def beam(FWHM):
@@ -294,16 +293,23 @@ def beam(FWHM):
     Omega_beam = (2*np.pi *sigma_beam**2).to(u.sr)
     return Omega_beam
 
+def beam2(nu, D=11.5*u.m):
+
+    FWHM = 1.22 * cst.c / nu.to(u.Hz).value / D.value * u.rad
+    sigma_beam = FWHM * gaussian_fwhm_to_sigma
+    Omega_beam = 2.0 * np.pi * sigma_beam ** 2
+    return Omega_beam, FWHM
+
 def sigma(P_A, N_modes, P_B=None, P_AB=None):
     if(P_B is None):  P_B  = P_A
     if(P_AB is None): P_AB = np.sqrt(P_A*P_B)
     sigma = np.sqrt(P_AB**2 + (P_A*P_B) ) / np.sqrt(2*N_modes)
     return sigma
 
-def SNR_fct(signal_3d, sigma_3d):
+def SNR_fct(signal_3d, sigma_3d, w):
     SNR = signal_3d/sigma_3d
-    SNR_comb = np.abs(np.sqrt(np.sum(SNR**2)))
-    return  SNR_comb
+    SNR_comb = np.abs(np.sqrt(np.sum(SNR[w:]**2)))
+    return  SNR_comb, SNR
 
 def gaussian_pk(k, sigma):
     return np.exp(- (np.pi * k)**2 * (2 * sigma**2))**2
@@ -311,3 +317,21 @@ def gaussian_pk(k, sigma):
 def inverse(x):
     freq_CII = 1900.53690000
     return -1 + (freq_CII/x)
+
+def my_sensitivity(nu_obs, Delta_nu, dnu, NEFD_dual_band, t_survey, field_size_survey):
+    '''
+    inspired_from_compute_mapping_speed & Hu et al. 
+
+    nu_obs: [GHz]
+    Delta_nu: bandwidth [GHz]
+    dnu: absolute spectral resolution [GHz]
+    NEFD_dual_band: 99/118 LF/HF [mJy/beam]
+    t_survey: total integration time, in hours
+    field_size_survey: total surveyed area [deg^2]
+    '''
+    Omega_beam, fwhm = beam(nu_obs) #PS: pix size is >2 times the fwhm (good)
+    t_obs, Omega_pix = t_per_pix(t_survey, field_size_survey)
+    NEFD_spec_mJy_beam = NEFD_dual_band * Delta_nu / dnu.value 
+    NEI_MJy_sr = 1e-9 * NEFD_spec_mJy_beam / Omega_beam 
+
+    return NEI_MJy_sr, NEFD_spec_mJy_beam, Omega_beam, Omega_pix, t_obs
