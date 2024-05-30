@@ -14,16 +14,22 @@ import argparse
 from specutils import Spectrum1D
 from specutils.manipulation import FluxConservingResampler
 
+import matplotlib.lines as mlines
+import matplotlib.patches as mpatches
+import matplotlib.markers as mmarkers
+
+line_list_fancy = ["CO({}-{})".format(J_up, J_up - 1) for J_up in range(1, 9)]
+
 #/home/mvancuyck/CO_paper/CONCERTO_SENSITIVITY/SIDES_sensitivity_1Ghz_res.txt
-def sensitivity(Dnu, nu_obs, dnu, tex_file='/home/mvancuyck/Desktop/co-paper-snr/CONCERTO_SENSITIVITY/SIDES_sensitivity_1Ghz_res.txt', beam_from_file=True, test=False):
+def sensitivity(dnu, nu_obs, tex_file='/home/mvancuyck/Desktop/co-paper-snr/CONCERTO_SENSITIVITY/SIDES_sensitivity_1Ghz_res.txt', beam_from_file=True, test=False):
     #Load the CONCERTO noise file
 
     nu_sens, NEFD_mJy_beam, Omega_beam_file = np.loadtxt(tex_file, unpack = True)
     Omega_beam = np.interp(nu_obs.to(u.GHz).value, nu_sens, Omega_beam_file*u.sr)
     #Rescale the sensitivity to the spectral resolution
-    NEI_MJy_sr = (1e-9 * NEFD_mJy_beam / (Omega_beam) / Dnu.value) * u.MJy
+    NEI_MJy_sr = (1e-9 * NEFD_mJy_beam / (Omega_beam) / dnu.value) * u.MJy
     #Needed to gen noisy maps
-    NEFD_mJy_beam_obs =  np.interp(nu_obs.to(u.GHz).value, nu_sens, NEFD_mJy_beam) * u.mJy / Dnu.value
+    NEFD_mJy_beam_obs =  np.interp(nu_obs.to(u.GHz).value, nu_sens, NEFD_mJy_beam) * u.mJy / dnu.value
     NEI_MJy_sr_obs   = np.interp(nu_obs.to(u.GHz).value, nu_sens, NEI_MJy_sr)
 
     if(test):
@@ -32,7 +38,7 @@ def sensitivity(Dnu, nu_obs, dnu, tex_file='/home/mvancuyck/Desktop/co-paper-snr
         n_slices = np.ceil(Dnu / dnu).value.astype(int)*3
         freqs = np.linspace(nu_obs-n_slices/2*dnu, nu_obs+n_slices/2*dnu, int(n_slices+1))
         '''
-        freqs_1channel = np.asarray(((nu_obs-Dnu).value,  nu_obs.value, (nu_obs+Dnu).value))*u.GHz
+        freqs_1channel = np.asarray(((nu_obs-dnu).value,  nu_obs.value, (nu_obs+dnu).value))*u.GHz
         fluxc_resample = FluxConservingResampler()
         noise = fluxc_resample(input_spectra, freqs_1channel)  
         noise_for_slice = noise.flux[1]
@@ -43,76 +49,9 @@ def sensitivity(Dnu, nu_obs, dnu, tex_file='/home/mvancuyck/Desktop/co-paper-snr
         plt.plot(nu_sens, np.ones(len(nu_sens)), 'or')
     return NEI_MJy_sr_obs, NEFD_mJy_beam_obs.to(u.Jy), Omega_beam
 
-def my_sensitivity(nu_obs, Delta_nu, dnu, NEFD_dual_band, t_survey, field_size_survey):
-    '''
-    inspired_from_compute_mapping_speed & Hu et al. 
-
-    nu_obs: [GHz]
-    Delta_nu: bandwidth [GHz]
-    dnu: absolute spectral resolution [GHz]
-    NEFD_dual_band: 99/118 LF/HF [mJy/beam]
-    t_survey: total integration time, in hours
-    field_size_survey: total surveyed area [deg^2]
-    '''
-    Omega_beam, fwhm = beam(nu_obs) #PS: pix size is >2 times the fwhm (good)
-    t_obs, Omega_pix = t_per_pix(t_survey, field_size_survey)
-    NEFD_spec_mJy_beam = NEFD_dual_band * Delta_nu / dnu.value 
-    NEI_MJy_sr = 1e-9 * NEFD_spec_mJy_beam / Omega_beam 
-
-    return NEI_MJy_sr, NEFD_spec_mJy_beam, Omega_beam, Omega_pix, t_obs
-
-
-def t_per_pix(t_survey, field_size_survey, fov_diameter=18.54*u.arcmin, npix_tot=2152):
-    fov = np.pi*(fov_diameter**2).to(u.deg**2)
-    Omega_pix = fov/npix_tot
-    t_obs = t_survey * fov.value / field_size_survey / npix_tot * 3600 #secondes, 
-    return t_obs, Omega_pix
-
-
-def cosmo_distance(z, dnu,  nu_obs, zmin, zmax,):
-    dz = dnu * (1+z) / nu_obs
-    Dc =  cosmo.comoving_distance(z)/u.rad
-    delta_Dc = ( (cst.c*1e-3*u.km/u.s) * (1+z) * dnu / cosmo.H(z) / nu_obs)
-    pk_3d_to_2d = 1/(Dc**2*delta_Dc)
-    k_3d_to_2d  = Dc/2/np.pi
-
-    Dc_min = cosmo.comoving_distance(zmin)
-    Dc_max = cosmo.comoving_distance(zmax)
-    full_volume_covered = 4/3*np.pi*(Dc_max**3-Dc_min**3)
-
-    return Dc, delta_Dc, pk_3d_to_2d.to(u.sr/u.Mpc**3), k_3d_to_2d, full_volume_covered
-
-
-def beam(nu, D=11.5*u.m):
-
-    FWHM = 1.22 * cst.c / nu.to(u.Hz).value / D.value * u.rad
-    sigma_beam = FWHM * gaussian_fwhm_to_sigma
-    Omega_beam = 2.0 * np.pi * sigma_beam ** 2
-    return Omega_beam, FWHM
-
-def volume(omega, Dc, z, nu_obs, dnu, full_volume_at_z=None):
-    c = cst.c*1e-3*u.km/u.s
-    y = (c / cosmo.H(z)) * (1+z)**2  / (nu_obs.to(u.GHz)*(1+z))
-    #If flat sky approximation hold, then compute volume with Eq.8
-    if(full_volume_at_z is None): volume = (Dc**2).to(u.Mpc**2/u.sr)*(omega).to('sr') * y * dnu
-    #Else, compute volume with Eq.7 if the total comoving volume is provided. 
-    else:                         volume = omega.to(u.sr) * full_volume_at_z/4/np.pi/u.sr
-    return volume
-
-def sigma(P_A, N_modes, P_B=None, P_AB=None):
-    if(P_B is None):  P_B  = P_A
-    if(P_AB is None): P_AB = np.sqrt(P_A*P_B)
-    sigma = np.sqrt(P_AB**2 + (P_A*P_B) ) / np.sqrt(2*N_modes)
-    return sigma
-
-def SNR_fct(signal_3d, sigma_3d):
-    SNR = signal_3d/sigma_3d
-    SNR_comb = np.abs(np.sqrt(np.sum(SNR**2)))
-    return  SNR_comb
-
-
 def plot_results(title, simu, z, dz, line, t_survey,  SNR_J, SNR_JG, Nmode, k_3d_to_2d, pk_3d_to_2d, 
                  k, pkJ, snJ, sigma_J, pkG, snG, pkJG, snJG, sigma_JG, pkJG_interlopers,  klim, kmax, Pk_noise, pkJ_interlopers  ): 
+    
 
     int_part, slope = print_scientific_notation( SNR_J )
     snrj = f"Auto spectrum SNR={int_part}"+"$\\times$"+"10^("+f"{slope}"+")"
@@ -128,63 +67,64 @@ def plot_results(title, simu, z, dz, line, t_survey,  SNR_J, SNR_JG, Nmode, k_3d
     G = partial( g, k_3d_to_2d )
     def f(pk_3d_to_2d, x): return x / pk_3d_to_2d.value
     F = partial( f, pk_3d_to_2d )
-
-    BS = 6; plt.rc('font', size=BS); plt.rc('axes', titlesize=BS); plt.rc('axes', labelsize=BS); mk = 3; lw=1
-    fig, axs = plt.subplots(1,3, figsize=(9,3), dpi=200)  
-    ax=axs[0]
-    ax.errorbar(k, pkJ, yerr=(sigma_J*pk_3d_to_2d), color='k', ecolor='silver', label=f"Intrinsic {line}@z={z}, dz={dz}" )
-    ax.loglog(k, pkJ-snJ, "b", label=f"Clustering of {line}@z={z}" )
-    ax.loglog(k[w], auto_sensitivity_nsigma[w]*pk_3d_to_2d, label=f'{n}'+'$\\rm \\sigma$ sensitivity', c='g')
-    ax.axhline(snJ.value, k.min().value, 7, linestyle=':', color='k', label='Intrinsic shot noise')
-    ax.axhline((Pk_noise*pk_3d_to_2d).value, k.min().value, 7, linestyle='--', color='cyan', label= f'Noise pow. spec, t={t_survey}h.')
-    ax.axvline(kmax.value, 1e-3, 1e2, linestyle=':', color='brown', )
-    ax.axvline(klim.value, 1e-3, 1e2, linestyle=':', color='magenta', )
-    ax.loglog(k, pkJ_interlopers,  "r", label=f"{line}@z={z}+Interlopers")
-    ax.legend()
-    ax.set_title(f"auto power spectrum \n of {simu} in 2D. \n {snrj}. ")
-    ax.set_xlabel('k $\\rm [arcmin^{-1}]$')
-    ax.set_ylabel('$\\rm P_J$(k) [$\\rm Jy^2/sr$]')
-    secax = ax.secondary_xaxis("top", functions=(G,G))
-    secax.set_xlabel('k [$\\rm Mpc^{-1}$]')
-    secax = ax.secondary_yaxis("right", functions=(F,F))
-    secax.set_ylabel('$\\rm P_{J}$(k) [$\\rm Jy^2/sr^2.Mpc^3]$]')
-    ax=axs[1]
-    ax.loglog(k, pkG, "k")
-    ax.axhline(snG.value, k.min().value, 7, linestyle=':', color='k', label='Intrinsic shot noise')
-    ax.loglog(k, pkG-snG, "b", label=f"Clustering")
-    ax.set_title(f"auto power spectrum \n of {simu} galaxies at z={z} , dz={dz} in 2D.")
-    ax.set_xlabel('k $\\rm [arcmin^{-1}]$')
-    ax.set_ylabel('$\\rm P_G$(k) [$\\rm sr$]')
-    secax = ax.secondary_xaxis("top", functions=(G,G))
-    secax.set_xlabel('k [$\\rm Mpc^{-1}$]')
-    secax = ax.secondary_yaxis("right", functions=(F,F))
-    secax.set_ylabel('$\\rm P_{G}$(k) [$\\rm Mpc^3]$')
-    ax=axs[2]
-    ax.errorbar(k, pkJG, yerr=(sigma_JG*pk_3d_to_2d), color='k', ecolor='silver', label=f"Intrinsic Gal-{line}@z={z}")
-    #ax.loglog(k, pkJG-snJG, "b", label=f"Clustering of Gal-{line}@z={z}, dz={dz}" )
-    ax.loglog(k, pkJG_interlopers, "r", label=f"Gal-{line}@z={z}+interlopers")
-    ax.axhline(snJG.value, k.min().value, 7, linestyle=':', color='k', label='Intrinsic shot noise')
-    ax.loglog(k[w], cross_sensitivity_nsigma[w]*pk_3d_to_2d, label=f'{n}'+'$\\rm \\sigma$ sensitivity', c='g')
-    #ax.axvline(klim.value, 1e-3, 1e2, linestyle=':', color='magenta')
-    ax.axvline(kmax.value, 1e-3, 1e2, linestyle=':', color='brown', label = 'CONCERTO $\\rm k_{max}$')
-    ax.axvline(klim.value, 1e-3, 1e2, linestyle=':', color='magenta', label = '$\\rm k_{min}$ in SNR')
-    ax.legend()
-    ax.set_title(f"cross power spectrum \n of {simu} at z={z} in 2D.  \n {snrjg}. ")
-    ax.set_xlabel('k $\\rm [arcmin^{-1}]$')
-    ax.set_ylabel('$\\rm P_{J\\times G}$(k) [$\\rm Jy$]')
-    secax = ax.secondary_xaxis("top", functions=(G,G))
-    secax.set_xlabel('k [$\\rm Mpc^{-1}$]')
-    secax = ax.secondary_yaxis("right", functions=(F,F))
-    secax.set_ylabel('$\\rm P_{J\\times G}$(k) [$\\rm Jy.sr^{-1}.Mpc^3]$')
-    #ax.set_yscale('linear')
-    fig.tight_layout()
-    fig.savefig(f'{title}.pdf', transparent=True)
-    fig.savefig(f'{title}.png', transparent=True)
-
-    return 0
+    
+    if(False):
+        BS = 6; plt.rc('font', size=BS); plt.rc('axes', titlesize=BS); plt.rc('axes', labelsize=BS); mk = 3; lw=1
+        fig, axs = plt.subplots(1,3, figsize=(9,3), dpi=200)  
+        ax=axs[0]
+        ax.errorbar(k, pkJ, yerr=(sigma_J*pk_3d_to_2d), color='k', ecolor='silver', label=f"Intrinsic {line}@z={z}, dz={dz}" )
+        ax.loglog(k, pkJ-snJ, "b", label=f"Clustering of {line}@z={z}" )
+        ax.loglog(k[w], auto_sensitivity_nsigma[w]*pk_3d_to_2d, label=f'{n}'+'$\\rm \\sigma$ sensitivity', c='g')
+        ax.axhline(snJ.value, k.min().value, 7, linestyle=':', color='k', label='Intrinsic shot noise')
+        ax.axhline((Pk_noise*pk_3d_to_2d).value, k.min().value, 7, linestyle='--', color='cyan', label= f'Noise pow. spec, t={t_survey}h.')
+        ax.axvline(kmax.value, 1e-3, 1e2, linestyle=':', color='brown', )
+        ax.axvline(klim.value, 1e-3, 1e2, linestyle=':', color='magenta', )
+        ax.loglog(k, pkJ_interlopers,  "r", label=f"{line}@z={z}+Interlopers")
+        ax.legend()
+        ax.set_title(f"auto power spectrum \n of {simu} in 2D. \n {snrj}. ")
+        ax.set_xlabel('k $\\rm [arcmin^{-1}]$')
+        ax.set_ylabel('$\\rm P_J$(k) [$\\rm Jy^2/sr$]')
+        secax = ax.secondary_xaxis("top", functions=(G,G))
+        secax.set_xlabel('k [$\\rm Mpc^{-1}$]')
+        secax = ax.secondary_yaxis("right", functions=(F,F))
+        secax.set_ylabel('$\\rm P_{J}$(k) [$\\rm Jy^2/sr^2.Mpc^3]$]')
+        ax=axs[1]
+        ax.loglog(k, pkG, "k")
+        ax.axhline(snG.value, k.min().value, 7, linestyle=':', color='k', label='Intrinsic shot noise')
+        ax.loglog(k, pkG-snG, "b", label=f"Clustering")
+        ax.set_title(f"auto power spectrum \n of {simu} galaxies at z={z} , dz={dz} in 2D.")
+        ax.set_xlabel('k $\\rm [arcmin^{-1}]$')
+        ax.set_ylabel('$\\rm P_G$(k) [$\\rm sr$]')
+        secax = ax.secondary_xaxis("top", functions=(G,G))
+        secax.set_xlabel('k [$\\rm Mpc^{-1}$]')
+        secax = ax.secondary_yaxis("right", functions=(F,F))
+        secax.set_ylabel('$\\rm P_{G}$(k) [$\\rm Mpc^3]$')
+        ax=axs[2]
+        ax.errorbar(k, pkJG, yerr=(sigma_JG*pk_3d_to_2d), color='k', ecolor='silver', label=f"Intrinsic Gal-{line}@z={z}")
+        #ax.loglog(k, pkJG-snJG, "b", label=f"Clustering of Gal-{line}@z={z}, dz={dz}" )
+        ax.loglog(k, pkJG_interlopers, "r", label=f"Gal-{line}@z={z}+interlopers")
+        ax.axhline(snJG.value, k.min().value, 7, linestyle=':', color='k', label='Intrinsic shot noise')
+        ax.loglog(k[w], cross_sensitivity_nsigma[w]*pk_3d_to_2d, label=f'{n}'+'$\\rm \\sigma$ sensitivity', c='g')
+        #ax.axvline(klim.value, 1e-3, 1e2, linestyle=':', color='magenta')
+        ax.axvline(kmax.value, 1e-3, 1e2, linestyle=':', color='brown', label = 'CONCERTO $\\rm k_{max}$')
+        ax.axvline(klim.value, 1e-3, 1e2, linestyle=':', color='magenta', label = '$\\rm k_{min}$ in SNR')
+        ax.legend()
+        ax.set_title(f"cross power spectrum \n of {simu} at z={z} in 2D.  \n {snrjg}. ")
+        ax.set_xlabel('k $\\rm [arcmin^{-1}]$')
+        ax.set_ylabel('$\\rm P_{J\\times G}$(k) [$\\rm Jy$]')
+        secax = ax.secondary_xaxis("top", functions=(G,G))
+        secax.set_xlabel('k [$\\rm Mpc^{-1}$]')
+        secax = ax.secondary_yaxis("right", functions=(F,F))
+        secax.set_ylabel('$\\rm P_{J\\times G}$(k) [$\\rm Jy.sr^{-1}.Mpc^3]$')
+        #ax.set_yscale('linear')
+        fig.tight_layout()
+        fig.savefig(f'{title}.pdf', transparent=True)
+        fig.savefig(f'{title}.png', transparent=True)
+    
+    return cross_sensitivity_nsigma, w
 
 def main_paper(simu, cat, simu_field_size, field_size_survey, line, rest_freq, z, dz, t_survey, npix, 
-               dtype="all_lines", n_slices=0.0, dnu = 1.5*u.GHz, plot_map=False):
+               dtype="_with_interlopers", n_slices=0.0, dnu_instru = 1.5*u.GHz):
 
 
     #Load the dicts for transition of reference 
@@ -193,9 +133,13 @@ def main_paper(simu, cat, simu_field_size, field_size_survey, line, rest_freq, z
     file = f"dict_dir/dict_LIMgal_{simu}_z{z}_dz{np.round(dz,3)}_{n_slices}slices_{simu_field_size}deg2_{line}.p"
     d = pickle.load( open(file, 'rb'))
 
+    pkJG_interlopers = (np.abs(dict[f'pk_J-gal_{int(n_slices)}']) * u.sr).to(u.Jy)
+    pkJ_interlopers =   np.abs(dict[f'pk_J_{int(n_slices)}'])
+
+
     #-----------------             
     #Without interlopers
-    if(plot_map): 
+    if(False): 
         hdul = fits.open(f'{output_path}/{simu}_z{z}_dz{np.round(dz,3)}_{n_slices}slices_{simu_field_size}deg2_{line}_MJy_sr.fits')
         data_cube = hdul[0].data  
         wcs_cube = wcs.WCS(hdul[0].header)
@@ -213,33 +157,36 @@ def main_paper(simu, cat, simu_field_size, field_size_survey, line, rest_freq, z
         #fig.tight_layout()
     #-----------------
     
-    zmin = z-dz/2 ##!!
-    zmax = z+dz/2 ##!!
+    zmin = z-(n_slices*dz)-dz/2 
+    zmax = z+(n_slices*dz)+dz/2 
     freq_obs = rest_freq/(1+z)
-    Dnu = dz * freq_obs/(1+z) ##!!
-    NEI_MJy_sr, NEFD_Jy_beam, Omega_beam = sensitivity(Dnu, freq_obs, dnu) ##!!
-    Dc, delta_Dc, pk_3d_to_2d, k_3d_to_2d, full_volume_covered = cosmo_distance(z, Dnu, freq_obs, zmin, zmax)##!!
+    #dnu_simu = dz * freq_obs/(1+z) 
+    Dnu = (zmax-zmin)*freq_obs/(1+z)
+    NEI_MJy_sr, NEFD_Jy_beam, Omega_beam = sensitivity(dnu_instru*u.GHz, freq_obs) 
+    
+    Dc, delta_Dc, pk_3d_to_2d, k_3d_to_2d, full_volume_covered = cosmo_distance(z, Dnu, freq_obs, zmin, zmax) 
     #
-    Vpix    = volume(Omega_beam, Dc, z, freq_obs, Dnu) ##!!
-    Vsurvey = field_size_survey.to(u.sr) * full_volume_covered / (4*np.pi)
+    
+    Vpix    = volume(Omega_beam, Dc, z, freq_obs, dnu_instru*u.GHz) 
+    Vsurvey = field_size_survey.to(u.sr).value * full_volume_covered / (4*np.pi)
     t_obs = t_survey *  npix * Omega_beam.to(u.deg**2) / field_size_survey.to(u.deg**2)
     Pk_noise = (Vpix * NEI_MJy_sr**2/ t_obs).to(u.Jy**2/u.sr**2*u.Mpc**3) 
-
-    pkJ =   np.abs(d['pk_J_0'])
-    pkG =         (d['pk_gal_0']*u.sr**2).to(u.sr)
-    pkJG = (np.abs(d['pk_J-gal_0']) * u.sr).to(u.Jy)
+    
+    pkJ =   np.abs(d[f'pk_J_{int(n_slices)}'])
+    pkG =         (d[f'pk_gal_{int(n_slices)}']*u.sr**2).to(u.sr)
+    pkJG = (np.abs(d[f'pk_J-gal_{int(n_slices)}']) * u.sr).to(u.Jy)
     pkJ_3d  = (pkJ   / pk_3d_to_2d).to(u.Jy**2/u.sr**2*u.Mpc**3)
     pkG_3d  = (pkG   / pk_3d_to_2d).to(u.Mpc**3)
     pkJG_3d = (pkJG  / pk_3d_to_2d).to(u.Jy/u.sr*u.Mpc**3)
     
-    snJ = d['LIM_shot_list'][0]
-    snG = d['gal_shot_list'][0]*u.sr
-    snJG = (d['LIMgal_shot_list'][0]  * u.sr).to(u.Jy)
+    snJ = d['LIM_shot_list'][int(n_slices)]
+    snG = d['gal_shot_list'][int(n_slices)]*u.sr
+    snJG = (d['LIMgal_shot_list'][int(n_slices)]  * u.sr).to(u.Jy)
     snJ_3d  = (snJ   / pk_3d_to_2d).to(u.Jy**2/u.sr**2*u.Mpc**3)
     snG_3d  = (snG   / pk_3d_to_2d).to(u.Mpc**3)
     snJG_3d  = (snJG / pk_3d_to_2d).to(u.Jy/u.sr*u.Mpc**3)
     
-    res = d['res']
+    #res = d['res']
     k   = d['k']#.to(u.rad**-1)
     K   = k.to(u.rad**-1)/k_3d_to_2d #Mpc^-1
     delta_k = np.diff(d["kbin"]) ##!!
@@ -249,24 +196,29 @@ def main_paper(simu, cat, simu_field_size, field_size_survey, line, rest_freq, z
     Klim = (1.8e-1/u.Mpc) #1.35
     klim = (Klim*k_3d_to_2d).to(1/u.arcmin)
 
-    w = np.where(k<klim)[0][-1]+1
-    sigma_J  = sigma(pkJ_3d+Pk_noise,  Nmode)
+    
+    sigma_J  = sigma(pkJ_3d+Pk_noise,  Nmode) 
     sigma_G  = sigma(pkG_3d,           Nmode)
     sigma_JG = sigma(pkJ_3d+Pk_noise,  Nmode, pkG_3d, pkJG_3d)
 
-    SNR_J = SNR_fct(pkJ_3d[:w], sigma_J[:w])
-    SNR_G = SNR_fct(pkG_3d[:w], sigma_G[:w])
 
-    SNR_JG = SNR_fct(pkJG_3d[:w], sigma_JG[:w])
+    #w = np.where(k<klim)[0][-1]+1
+    w = np.where(k>kmax)[0][0]
+    SNR_J, SNR_K_J = SNR_fct(pkJ_3d, sigma_J, w) ##!!
+    SNR_G, SNR_K_G = SNR_fct(pkG_3d, sigma_G, w)
+    SNR_JG, SNR_K_JG = SNR_fct(pkJG_3d, sigma_JG, w)
+    
 
-    plot_results(f"{simu}_z{z}_dz{np.round(dz,3)}_{n_slices}slices_{simu_field_size}deg2_{line}", 
+    cross_sensitivity, w = plot_results(f"{simu}_z{z}_dz{np.round(dz,3)}_{n_slices}slices_{simu_field_size}deg2_{line}", 
                 simu, z, dz, line, t_survey, SNR_J, SNR_JG, Nmode,
                 k_3d_to_2d, pk_3d_to_2d, 
                 k, pkJ, snJ, sigma_J, pkG, snG, pkJG, snJG, sigma_JG, pkJG_interlopers,  
                 klim, kmax, Pk_noise, pkJ_interlopers)
 
-    return k, pkJ, snJ, pkG, snG, pkJG, snJG
-        
+
+    
+    return k, pkJ, snJ, pkG, snG, pkJG, snJG, k_3d_to_2d, pk_3d_to_2d, sigma_JG, SNR_K_JG, cross_sensitivity, w, kmax, SNR_JG, pkJG_interlopers
+    
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="gen cubes from Uchuu",
@@ -294,34 +246,134 @@ if __name__ == "__main__":
                'FWHM':30,
                 }
 
-    for nslice, dz in zip(n_list,dz_list): 
+    for ip, (nslice, dz) in enumerate(zip(n_list,dz_list)): 
+        if(ip !=1): continue
         
-        dict = {}
-        for line, rest_freq in zip(line_list[2:5],rest_freq_list[2:5]):
-            k, pkJ, snJ, pkG, snG, pkJG, snJG = main_paper('pySIDES_from_uchuu', cat, 117, 
+        fig, (power, SNR) = plt.subplots(2, 3, sharex=True, sharey = 'row', gridspec_kw={'height_ratios': [4,3]}, figsize=(8, 3.3), dpi = 200); lw=1.5
+        patchs=[]
+        for i, (line, linef, rest_freq, c) in enumerate(zip(line_list[2:5], line_list_fancy[2:5], rest_freq_list[2:5],('b', 'cyan', 'g'))):
+            k, pkJ, snJ, pkG, snG, pkJG, snJG, k_3d_to_2d, pk_3d_to_2d, sigma_JG, SNR_JG, cross_sensitivity, w, klim, SNR_JGv,pkJG_interlopers = main_paper('pySIDES_from_uchuu', cat, 117, 
                                                            CONCERTO['Omega_field'], line, rest_freq, 
                                                            1.0, dz, CONCERTO['t_survey'], 
                                                            CONCERTO['npix'], n_slices=nslice, 
-                                                           dnu=CONCERTO['spectral_resolution'])
+                                                           dnu_instru=CONCERTO['spectral_resolution'])
+            #power[i].loglog(k.value, pkJG.value, linewidth=lw, color = 'k', ls=':')     
+            power[i].loglog(k.value, pkJG_interlopers.value, linewidth=lw, color = 'gray')     
 
-        dict = {}
-        for line, rest_freq in zip(line_list[2:4],rest_freq_list[2:4]):        
-            k, pkJ, snJ, pkG, snG, pkJG, snJG = main_paper('pySIDES_from_uchuu', cat, 117, 
+            power[i].axhline(snJG.value, color='k', linestyle='--',  linewidth=lw)
+            power[i].axvline(klim.value, color='grey', linestyle='--',  linewidth=lw)
+            power[i].loglog(k.value, pkJG.value-snJG.value, linewidth=lw, color = 'k')     
+            power[i].fill_between(k.value, pkJG.value-(sigma_JG*pk_3d_to_2d).value,pkJG.value+(sigma_JG*pk_3d_to_2d).value, alpha=0.3, color=c)   
+            power[i].loglog(k.value, cross_sensitivity*pk_3d_to_2d, linewidth=lw, color = 'orange')     
+            SNR[i].loglog(k.value, SNR_JG, '--|', c=c,linewidth=lw, markersize=5)  
+            SNR[i].legend(title=f'SNR tot.={np.round(SNR_JGv).astype(int)}', loc='upper left', fontsize=8, frameon=False)
+            power[i].legend(title=f'{linef}@z=1.0', loc='upper right', fontsize=8, frameon=False)    
+            if(i==1): SNR[i].set_xlabel('$\\rm k_{\\theta}$ [$\\rm arcmin^{-1}$]')
+            if(i==0): SNR[i].set_ylabel('SNR')
+            #power[i].legend( bbox_to_anchor=(1,1), fontsize=8, frameon=False)    
+
+            patch = mpatches.Patch(color=c, label=linef); patchs.append(patch)
+
+            power[i].tick_params(axis = "x", which='major', tickdir = "inout", color='k')
+            power[i].tick_params(axis = "y", which='major', tickdir = "inout",  color='k')
+
+            SNR[i].tick_params(axis = "y", which='major', tickdir = "inout", right = True, color='k')
+            SNR[i].tick_params(axis = "y", which='minor', left=False, color='k')
+
+
+            def g(k_3d_to_2d, x): return (x*u.arcmin**-1).to(u.rad**-1).value / k_3d_to_2d.value
+            G = partial( g, k_3d_to_2d )
+            def f(pk_3d_to_2d, x): return x / pk_3d_to_2d.value
+            F = partial( f, pk_3d_to_2d )
+            secax =power[i].secondary_xaxis("top", functions=(G,G))
+            if(i==1): secax.set_xlabel('k [$\\rm Mpc^{-1}$]')
+            secax =power[i].secondary_yaxis("right", functions=(F,F))
+            if(i==2): secax.set_ylabel('$\\rm P_{\\times}$(k) [$\\rm Jy.sr^{-1}.Mpc^3]$')
+            if(i==0): power[i].set_ylabel('$\\rm P_{\\times}(k_{\\theta})$ [$\\rm Jy]$')
+
+        plt.rcParams.update({'font.size': 10})
+        #plt.rcParams.update({'legend.frameon':False})
+        #fig.tight_layout()
+        fig.tight_layout(rect=[0, 0, 0.85, 1])  # Adjust rect to make space on the right
+        fig.subplots_adjust(hspace=0, wspace=0)
+
+
+        patch = mlines.Line2D([], [], color='k', linestyle="solid", label='Clustering' ); patchs.append(patch);
+        patch = mlines.Line2D([], [], color='k', linestyle="--",    label='Shot noise' ); patchs.append(patch);
+        patch = mlines.Line2D([], [], color='grey',                 label='$\\rm P^{tot}_{\\times}(k)$ \n+interlopers' ); patchs.append(patch);
+        patch = mlines.Line2D([], [], color='orange',                    label='CONCERTO \n 3$\\rm \\sigma$ limit \n' ); patchs.append(patch);
+        patch = mpatches.Patch(color='gray', label='r.m.s \n on $P^{tot}_{\\times}$'); patchs.append(patch)
+
+        patch = mlines.Line2D([], [], color='grey', linestyle="--",    label='$\\rm k^{CONCERTO}_{min}$' ); patchs.append(patch);
+
+        fig.legend(handles=patchs, bbox_to_anchor=(0.99, 0.8), fontsize=8, frameon=False)
+        fig.savefig(f'nslice{nslice}_z1_dz{dz}.png', transparent=True)
+
+
+        fig, (power, SNR) = plt.subplots(2, 3, sharex=True, sharey = 'row', gridspec_kw={'height_ratios': [4,3]}, figsize=(8, 3.3), dpi = 200); lw=1.5
+        patchs=[]
+        for i,(line, linef, rest_fre, c) in enumerate(zip(line_list[3:6],line_list_fancy[3:6],rest_freq_list[3:6], ('cyan', 'g', 'purple'))):        
+            k, pkJ, snJ, pkG, snG, pkJG, snJG, k_3d_to_2d, pk_3d_to_2d, sigma_JG, SNR_JG, cross_sensitivity, w, klim, SNR_JGv, pkJG_interlopers = main_paper('pySIDES_from_uchuu', cat, 117, 
                                                            CONCERTO['Omega_field'], line, rest_freq, 
                                                            1.5, dz, CONCERTO['t_survey'], CONCERTO['npix'], 
-                                                           n_slices=nslice, dnu=CONCERTO['spectral_resolution'])
+                                                           n_slices=nslice, dnu_instru=CONCERTO['spectral_resolution'])
         
-    plt.show()
+            #power[i].loglog(k.value, pkJG.value, linewidth=lw, color = 'k', ls=':')     
+            power[i].loglog(k.value, pkJG_interlopers.value, linewidth=lw, color = 'gray')     
+
+            power[i].axhline(snJG.value, color='k', linestyle='--',  linewidth=lw)
+            power[i].axvline(klim.value, color='grey', linestyle='--',  linewidth=lw)
+            power[i].loglog(k.value, pkJG.value-snJG.value, linewidth=lw, color = 'k')     
+            power[i].fill_between(k.value, pkJG.value-(sigma_JG*pk_3d_to_2d).value,pkJG.value+(sigma_JG*pk_3d_to_2d).value, alpha=0.3, color=c)   
+            power[i].loglog(k.value, cross_sensitivity*pk_3d_to_2d, linewidth=lw, color = 'orange')     
+            SNR[i].loglog(k.value, SNR_JG, '--|', c=c,linewidth=lw, markersize=5)  
+            SNR[i].legend(title=f'SNR tot.={np.round(SNR_JGv).astype(int)}', loc='upper left', fontsize=8, frameon=False)
+            power[i].legend(title=f'{linef}@z=1.5', loc='upper right', fontsize=8, frameon=False)    
+            if(i==1): SNR[i].set_xlabel('$\\rm k_{\\theta}$ [$\\rm arcmin^{-1}$]')
+            if(i==0): SNR[i].set_ylabel('SNR')
+            #power[i].legend( bbox_to_anchor=(1,1), fontsize=8, frameon=False)    
+
+            patch = mpatches.Patch(color=c, label=linef); patchs.append(patch)
+
+            power[i].tick_params(axis = "x", which='major', tickdir = "inout", color='k')
+            power[i].tick_params(axis = "y", which='major', tickdir = "inout",  color='k')
+            power[i].tick_params(axis = "y", which='minor',left =False)
+            SNR[i].tick_params(axis = "y", which='major', tickdir = "inout", right = True, color='k')
+            SNR[i].tick_params(axis = "y", which='minor', left=False)
+
+            def g(k_3d_to_2d, x): return (x*u.arcmin**-1).to(u.rad**-1).value / k_3d_to_2d.value
+            G = partial( g, k_3d_to_2d )
+            def f(pk_3d_to_2d, x): return x / pk_3d_to_2d.value
+            F = partial( f, pk_3d_to_2d )
+            secax =power[i].secondary_xaxis("top", functions=(G,G))
+            if(i==1): secax.set_xlabel('k [$\\rm Mpc^{-1}$]')
+            secax =power[i].secondary_yaxis("right", functions=(F,F))
+            secax.tick_params(axis = "y", which='minor',right=False)
+
+            if(i==2): secax.set_ylabel('$\\rm P_{\\times}$(k) [$\\rm Jy.sr^{-1}.Mpc^3]$')
+            if(i==0): power[i].set_ylabel('$\\rm P_{\\times}(k_{\\theta})$ [$\\rm Jy]$')
+
+
+        plt.rcParams.update({'font.size': 10})
+        #plt.rcParams.update({'legend.frameon':False})
+        #fig.tight_layout()
+        fig.tight_layout(rect=[0, 0, 0.85, 1])  # Adjust rect to make space on the right
+        fig.subplots_adjust(hspace=0, wspace=0)
+
+
+        patch = mlines.Line2D([], [], color='k', linestyle="solid", label='Clustering' ); patchs.append(patch);
+        patch = mlines.Line2D([], [], color='k', linestyle="--",    label='Shot noise' ); patchs.append(patch);
+        patch = mlines.Line2D([], [], color='grey',                 label='$\\rm P^{tot}_{\\times}(k)$ \n+interlopers' ); patchs.append(patch);
+        patch = mlines.Line2D([], [], color='orange',                    label='CONCERTO \n 3$\\rm \\sigma$ limit \n' ); patchs.append(patch);
+        patch = mpatches.Patch(color='gray', label='r.m.s \n on $P^{tot}_{\\times}$'); patchs.append(patch)
+
+        patch = mlines.Line2D([], [], color='grey', linestyle="--",    label='$\\rm k^{CONCERTO}_{min}$' ); patchs.append(patch);
+
+        fig.legend(handles=patchs, bbox_to_anchor=(0.99, 0.8), fontsize=8, frameon=False)
+        fig.savefig(f'nslice{nslice}_z1.5_dz{dz}.png', transparent=True)
+
+        plt.show()
     
-
-
-
-
-
-
-
-
-
     '''
             dict[f'pk_auto_{line}_tot'] = pkJ
             dict[f'auto_shot_noise_{line}']  = snJ
