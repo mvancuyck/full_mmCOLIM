@@ -227,7 +227,7 @@ if __name__ == "__main__":
         make_all_cubes(cat, simu, fs, dirpath, line=J,rest_freq = rest_freq.value )
     
     Nmax=200; 
-    for tile_size in (1,9,0.2, 0.3):
+    for tile_size in (1.5,9,0.2, 0.3):
         if(fs<tile_size): continue
  
         ragrid=np.arange(cat['ra'].min(),cat['ra'].max(),np.sqrt(tile_size))
