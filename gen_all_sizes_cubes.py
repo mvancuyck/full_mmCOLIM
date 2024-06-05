@@ -226,7 +226,7 @@ if __name__ == "__main__":
 
     
     Nmax=200; 
-    for tile_size in (1.5,):
+    for tile_size in (1.5,1):
         if(fs<tile_size): continue
  
         ragrid=np.arange(cat['ra'].min(),cat['ra'].max(),np.sqrt(tile_size))
@@ -249,6 +249,5 @@ if __name__ == "__main__":
                 #gen_maps(cat_subfield, f"{simu}_ntile_{l}", 0.64, 0, 0.22, tile_size, dirpath, line=J,rest_freq = rest_freq.value)
 
 
-    
     for J, rest_freq in zip(line_list, rest_freq_list):
         make_all_cubes(cat, simu, fs, dirpath, line=J,rest_freq = rest_freq.value )
