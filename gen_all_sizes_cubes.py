@@ -82,7 +82,7 @@ def make_all_cubes(cat, simu, field_size, cat_path,line, rest_freq, ncpus=24):
 
 def gen_maps(cat, simu, 
             z, n_slices, dz, field_size, cat_path, line, rest_freq, mstar_cut = 1e10, 
-            gen_continuum=True, gen_galaxies=True, gen_interlopers=True, compute_properties=True, ):
+            gen_continuum=False, gen_galaxies=True, gen_interlopers=True, compute_properties=True, ):
     
     '''
     Generate a map line intensity map as well as a galaxy map with stellar mass cut mstar_cut from a catalogue cat. 
@@ -212,6 +212,7 @@ if __name__ == "__main__":
     parser.add_argument('output_path', help="output path of products", default = '.')
     args = parser.parse_args()
     output_path = args.output_path
+    print('change')
 
     simu, cat, dirpath, fs = load_cat()
 
@@ -223,11 +224,9 @@ if __name__ == "__main__":
     simu='pySIDES_from_bolshoi'; fs=2
     '''
 
-    for J, rest_freq in zip(line_list, rest_freq_list):
-        make_all_cubes(cat, simu, fs, dirpath, line=J,rest_freq = rest_freq.value )
     
     Nmax=200; 
-    for tile_size in (1.5,9,0.2, 0.3):
+    for tile_size in (1.5,):
         if(fs<tile_size): continue
  
         ragrid=np.arange(cat['ra'].min(),cat['ra'].max(),np.sqrt(tile_size))
@@ -251,3 +250,5 @@ if __name__ == "__main__":
 
 
     
+    for J, rest_freq in zip(line_list, rest_freq_list):
+        make_all_cubes(cat, simu, fs, dirpath, line=J,rest_freq = rest_freq.value )
