@@ -72,7 +72,7 @@ for iax, (data, z, cmap, title, vmin, vmax) in enumerate(params_list):
 # Create colorbar for cividis colormap
 cbar_ax_cividis = fig.add_axes([0.92, 0.55, 0.02, 0.35])  # [left, bottom, width, height]
 cbar_cividis = fig.colorbar(im1, cax=cbar_ax_cividis)
-cbar_cividis.set_label('$\\rm I_{\\nu}$ [kJy/sr]')
+cbar_cividis.set_label('$\\rm B_{\\nu}$ [kJy/sr]')
 
 # Create colorbar for Greys colormap
 cbar_ax_greys = fig.add_axes([0.92, 0.15, 0.02, 0.35])  # [left, bottom, width, height]
