@@ -64,6 +64,81 @@ def CO10_LF(z_list, dz, alpha_co = 3.6):
     plt.savefig('rho_sides.png', dpi=200, transparent=True)
     plt.show()
 
+
+    colors_co = ('orange', 'r', 'b', 'cyan', 'g', 'purple', 'magenta', 'grey',)
+    b_list, I_list = bI_from_autospec_and_cat(n_slices,9,0.15, z_list, dz_list )
+    bI_tinker = bI_from_tinker(n_slices,9,0.15, z_list, dz_list)
+    bI_mes, bI_mesCO76, bI_mesCI = bI_crosspec(n_slices,9,0.15, z_list, dz_list, b_list,dtype = '_with_interlopers')
+    idz=0
+    
+    patchs=[]
+    BS = 8; plt.rc('font', size=BS); plt.rc('axes', titlesize=BS); plt.rc('axes', labelsize=BS)
+    fig = plt.figure(figsize=(5,5), dpi=200); 
+    mks=6; dr = 0.04; dy = 0.0; text_y_offset=0.2; lw=1; width = [1,1];  height = [1,1,1,1,1]
+    drelative = (-4,-3,-2,-1,0,1,2,3)
+    gs = gridspec.GridSpec(ncols=2, nrows=5, height_ratios= height, width_ratios=width)
+    axr = plt.subplot(gs[-2]); patchs = []
+    axr.set_xlabel(r"redshift")
+    axr.set_ylabel("relative \n difference")
+    axr.set_ylim(-0.3, 1.2)
+    for j, (line, rest_freq) in enumerate(zip(line_list_fancy[:8], rest_freq_list[:8])):
+        c=colors_co[j]; 
+        #---------------------------
+        ax = plt.subplot(gs[j]); 
+        #---------------------------
+        if(j==7): patch = mpatches.Patch(color='grey', label=r'from cross-power spectrum estimate' ); patchs.append(patch)
+        ax.errorbar(    z_list, np.mean(bI_mes[:,:,idz,j], axis=0),  linestyle='solid', color=c, ecolor=c, lw=lw) 
+        ax.fill_between(z_list, np.mean(bI_mes[:,:,idz,j], axis=0)-np.std(bI_mes[:,:,idz,j], axis=0), np.mean(bI_mes[:,:,idz,j], axis=0)+np.std(bI_mes[:,:,idz,j], axis=0), alpha = 0.2, color=c)
+        if(j==7): patch = mlines.Line2D([], [], color='k', linestyle=":", marker="*",  label='catalogue mean brightness \ntimes effective bias'); patchs.append(patch)
+        ax.errorbar( z_list, np.mean(b_list[:, :, idz, j,0,0]*I_list[:,:,idz,j], axis=0), yerr=np.std(b_list[:, :, idz, j,0,0]*I_list[:,:,idz,j], axis=0),
+                     linestyle=":", color='k', ecolor='k', marker='*',markersize = mks,lw=lw )
+        if(j==7): patch = mlines.Line2D([], [], color='k', linestyle="dashdot", marker="p", mfc='none', label=r'Tinker et al. 2010'); patchs.append(patch)
+        ax.errorbar( z_list, np.mean(bI_tinker[:, :, idz, j], axis=0), yerr=np.std(bI_tinker[:, :, idz, j], axis=0),
+                     linestyle="dashdot", color='k', ecolor='k', marker="p",markersize = mks,lw=lw,  mfc='none', mec='k')
+        if(j==7): ax.legend(handles = patchs, loc='center left', bbox_to_anchor=(-0.4, -0.7), fontsize=7, frameon=False)
+        axr.errorbar( np.asarray(z_list)+drelative[j]*dr, (np.mean(bI_mes[:,:,idz,j], axis=0)/np.mean(b_list[:, :, idz, j,0,0]*I_list[:,:,idz,j], axis=0))-1+dy, 
+                     yerr = (np.std(bI_mes[:,:,idz,j], axis=0)/np.mean(b_list[:, :, idz, j,0,0]*I_list[:,:,idz,j], axis=0)), linestyle="None", color=c,  ecolor=c, marker='*', markersize = mks, lw=lw )
+        #print(f'Mean uncertainty of J={j+1}:'+f'{100*np.mean( sigma_bI[:,j,0]/bI[:,j,0] )}'+'%')
+        #print(f'Mean diff with intrinsec of J={j+1}:'+f'{100*np.mean( bI[:,j,0]/bIcons[:,j,0]-1)}'+'%')
+        #print('')
+        #---------------------------
+        ax.set_ylabel(r"$b_{\rm eff} \times$"+"$\\rm B^{"+'{}'.format(line)+"}_{\\nu}$ ")
+        ax.set_xlim(0.4, np.max(z_list)+0.1)
+        ax.set_yscale("log")
+        if(j!=7): ax.tick_params(axis = "x", which='major', tickdir = "inout", bottom = True, top = True, labeltop=False,labelbottom=False)
+        else:
+            ax.tick_params(axis = "x", which='major', tickdir = "inout", bottom = True, top = True, labeltop=False,labelbottom=True)
+        if(j == 7): ax.set_xlabel(r"redshift")
+    fig.tight_layout(); fig.subplots_adjust(hspace=.0)
+    #---------------------------
+    for extension in ("png", "pdf"): plt.savefig(f"bI_CO_nslice{nslice}_dz{dz_list[0]}.{extension}", transparent=True)
+    plt.show()
+
+    BS = 11; plt.rc('font', size=BS); plt.rc('axes', titlesize=BS); plt.rc('axes', labelsize=BS)
+    fig = plt.figure(figsize=(3,4.5), dpi=200); lw=1; mks=6; j=6; c=colors_co[6]
+
+    plt.errorbar(    z_list, np.mean(bI_mes[:,:,idz,-2], axis=0),  linestyle='solid', color=colors_co[-2], ecolor=c, lw=lw,  label="CO(7-6) cross-power,\n with interlopers",) 
+    plt.fill_between(z_list, np.mean(bI_mes[:,:,idz,-2], axis=0)-np.std(bI_mes[:,:,idz,-2], axis=0), np.mean(bI_mes[:,:,idz,-2], axis=0)+np.std(bI_mes[:,:,idz,-2], axis=0), alpha = 0.2, color=colors_co[-2])
+    plt.errorbar(    z_list, np.mean(b_list[:, :, idz, -2,0,0]*I_list[:,:,idz,-2], axis=0), yerr=np.std(b_list[:, :, idz, -2,0,0]*I_list[:,:,idz,-2], axis=0), 
+                 label = 'catalogue mean brightness \ntimes fitted effective bias',
+                 linestyle=":", color='k', ecolor='k', marker='*',markersize = mks,lw=lw )
+    c='grey'
+    plt.errorbar(  z_list, np.mean(bI_mesCO76[:,:, idz],axis=0), linestyle='--', color=c, ecolor=c,  label='CO(7-6) cross-power,\n without interlopers', lw=lw) 
+    plt.fill_between(z_list, np.mean(bI_mesCO76[:,:, idz],axis=0) - np.std(bI_mesCO76[:,:, idz],axis=0), np.mean(bI_mesCO76[:,:, idz],axis=0) +  np.std(bI_mesCO76[:,:, idz],axis=0), alpha = 0.2, color=c,)
+    c='purple'
+    plt.errorbar( z_list, np.mean(bI_mesCI[:,:, idz],axis=0),  linestyle='--', color=c, ecolor=c,  label='CI(2-1) Cross-power', lw=lw) # yerr = sigma_bI_all_subfiels[:,j,0],
+    plt.fill_between(z_list, np.mean(bI_mesCI[:,:, idz],axis=0) - np.std(bI_mesCI[:,:, idz],axis=0), np.mean(bI_mesCI[:,:, idz],axis=0) +  np.std(bI_mesCI[:,:, idz],axis=0), alpha = 0.2, color=c,)
+    
+    #plt.errorbar(z_list, mean_cross, yerr = sigma_sum_cross, ls='--',c='dimgray',lw=lw, label='(CO76+[CI]21) cross-power)')    
+    line='CO(7-6)'
+    plt.ylabel(r"$b_{\rm eff} \times$"+"$\\rm B^{"+'{}'.format(line)+"}_{\\nu}$ ")
+    plt.legend(fontsize=6, loc='lower right' , frameon=False)
+    plt.xlim(0.4, np.max(z_list)+0.1); 
+    plt.yscale("log")
+    plt.xlabel(r"redshift")
+    plt.tight_layout()
+    for extension in ("png", "pdf"): plt.savefig(f"CO76.{extension}") 
+    
 tim_params = load_params('PAR/cubes.par')
 z_list = tim_params['z_list']
 dz_list = tim_params['dz_list']
