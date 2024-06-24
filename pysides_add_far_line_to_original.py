@@ -3,8 +3,7 @@ from pysides.gen_outputs import *
 from pysides.gen_lines import *
 from IPython import embed
 from pysides.make_cube import *
-from gen_all_sizes_TIM_cubes import load_cat
-
+from gen_all_sizes_cubes import load_cat
 recompute = False 
 
 params_sides = load_params('PAR/SIDES_from_original_with_fir_lines.par', force_pysides_path = '.')
