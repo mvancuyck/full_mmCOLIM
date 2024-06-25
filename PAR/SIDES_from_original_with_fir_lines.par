@@ -9,6 +9,8 @@ gen_pickle = False
 
 ##############################
 
+compute_LF = False
+
 
 ##### Parameters used to generate SFR properties #####
 
