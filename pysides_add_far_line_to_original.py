@@ -12,6 +12,6 @@ simu, cat, dirpath, fs = load_cat()
 
 params_sides['output_path'] = '.'
 
-cat = gen_fir_lines(cat, params_sides)
+catfir = gen_fir_lines(cat, params_sides)
 
-gen_outputs(cat, params_sides)
+gen_outputs(catfir, params_sides)
