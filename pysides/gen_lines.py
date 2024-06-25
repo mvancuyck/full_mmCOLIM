@@ -222,7 +222,8 @@ def gen_fir_lines(cat, params):
                 if(params['compute_LF']):
                     LF_list = np.asarray((len(z_list), len(log_L_mean)))
                     for iz, z in enumerate(z_list): 
-                        subcat = cat.loc[ (cat['redshift']>z-dz/2) and (cat['redshift']<=z+dz/2)]
+                        subcat = cat.loc[ (cat['redshift']>z-dz/2) ] 
+                        subcat = subcat.loc[(subcat['redshift']<=z+dz/2)]
                         logL_inzbin = np.log10(subcat['I'+line] * (1.04e-3 * subcat['Dlum']**2 * nu / (1 + subcat['redshift']))) 
                         Vslice = (117*u.deg**2).to(u.sr) / 3 * (cosmo.comoving_distance(z+dz/2)**3-cosmo.comoving_distance(z-dz/2)**3)
                         histo = np.histogram(logL_inzbin, bins = log_L_bins, range = (5, 12))
