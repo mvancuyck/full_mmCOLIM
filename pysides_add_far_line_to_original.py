@@ -8,6 +8,11 @@ recompute = False
 
 params_sides = load_params('PAR/SIDES_from_original_with_fir_lines.par', force_pysides_path = '.')
 simu, cat, dirpath, fs = load_cat()
+
+#dirpath="/home/mvancuyck/"
+#cat = Table.read(dirpath+'pySIDES_from_original.fits')
+#cat = cat.to_pandas(); simu = 'bolshoi'; fs=2
+
 cat = gen_fir_lines(cat, params_sides)
 
 dz=0.1
@@ -30,7 +35,7 @@ for tile_size in (0.2,1,2,9):
     coords = np.stack((ra_grid.flatten(), dec_grid.flatten()), axis=1)
 
     dict = {'log L #solar lum':log_L_mean, 'z':z_list, 'dz':dz, 'lines':line_list}
-    LF_list = np.asarray((len(line_list), len(z_list), np.min((200, len(coords))), len(log_L_mean) ))
+    LF_list = np.zeros((len(line_list), len(z_list), np.min((200, len(coords))), len(log_L_mean) ))
 
     for l, (ira, idec) in enumerate(coords):
         cat_subfield=cat.loc[(cat['ra']>=grid[0,idec,ira])&(cat['ra']<grid[0,idec,ira+1])&(cat['dec']>=grid[1,idec,ira])&(cat['dec']<grid[1,idec+1,ira])]
@@ -42,14 +47,13 @@ for tile_size in (0.2,1,2,9):
                 nu = params_sides['fir_lines_nu'][index_nu]
                 logL_inzbin = np.log10(subcat['I'+line] * (1.04e-3 * subcat['Dlum']**2 * nu / (1 + subcat['redshift']))) 
                 Vslice = (tile_size*u.deg**2).to(u.sr) / 3 * (cosmo.comoving_distance(z+dz/2)**3-cosmo.comoving_distance(z-dz/2)**3)
-                histo, edges = np.histogram(logL_inzbin, bins = log_L_bins, range = (5, 12))
-                LF_list[iline, iz, l, :]= histo / L_Deltabin / Vslice
+                histo = np.histogram(logL_inzbin, bins = log_L_bins, range = (5, 12))
+                LF_list[iline, iz, l, :]= histo[0] / L_Deltabin / Vslice
     dict[f'LFs #solar lum per Mpc3'] = LF_list
     pickle.dump(dict, open(f'FIR_lines_LFs_of_SIDES_Uchuu_{tile_size}deg2.p', 'wb'))
 
-
 dict = {'log L #solar lum':log_L_mean, 'z':z_list, 'dz':dz, 'lines':line_list}
-LF_list = np.asarray((len(line_list), len(z_list), len(log_L_mean) ))
+LF_list = np.zeros((len(line_list), len(z_list), len(log_L_mean) ))
 for iz, z in enumerate(z_list): 
     subcat = cat.loc[ (cat['redshift']>(z-dz/2))&(cat['redshift']<=(z+dz/2))]
     for iline, line in enumerate(line_list):        
@@ -57,7 +61,7 @@ for iz, z in enumerate(z_list):
         nu = params_sides['fir_lines_nu'][index_nu]
         logL_inzbin = np.log10(subcat['I'+line] * (1.04e-3 * subcat['Dlum']**2 * nu / (1 + subcat['redshift']))) 
         Vslice = (tile_size*u.deg**2).to(u.sr) / 3 * (cosmo.comoving_distance(z+dz/2)**3-cosmo.comoving_distance(z-dz/2)**3)
-        histo, edges = np.histogram(logL_inzbin, bins = log_L_bins, range = (5, 12))
-        LF_list[iline, iz, :]= histo / L_Deltabin / Vslice
+        histo = np.histogram(logL_inzbin, bins = log_L_bins, range = (5, 12))
+        LF_list[iline, iz, :]= histo[0] / L_Deltabin / Vslice
 dict[f'LFs #solar lum per Mpc3'] = LF_list
 pickle.dump(dict, open(f'FIR_lines_LFs_of_SIDES_Uchuu_117deg2.p', 'wb'))
