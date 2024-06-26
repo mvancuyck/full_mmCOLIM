@@ -201,11 +201,6 @@ def gen_fir_lines(cat, params):
         #all luminosities in Spiniglio are in 10^41 erg/s
         LIR_S12_units = (np.array(LIR) * u.Lsun).to('erg/s').value * 1.e-41
         
-        dz=0.1
-        z_list = np.arange(0.5,3.0, dz)
-        log_L_bins, L_Deltabin, log_L_mean = make_log_bin(5, 12, 20)
-        dict = {'log L #solar lum':log_L_mean, 'z':z_list, 'dz':dz}
-        
         for line, slope, norm in zip(line_list, line_slope, line_norm):
             #print('Generate '+line+'...')
 
@@ -218,17 +213,6 @@ def gen_fir_lines(cat, params):
                 Sline[sel[0]] = Lline_sf * (1 + cat['redshift'][sel[0]]) / (1.04e-3 * cat['Dlum'][sel[0]]**2 * nu) #*cat['mu'][sel[0]] ##!!
                 kwargs = {'I'+line:Sline}
                 cat = cat.assign(**kwargs) 
-
-                if(params['compute_LF']):
-                    LF_list = np.asarray((len(z_list), len(log_L_mean)))
-                    for iz, z in enumerate(z_list): 
-                        subcat = cat.loc[ (cat['redshift']>z-dz/2) ] 
-                        subcat = subcat.loc[(subcat['redshift']<=z+dz/2)]
-                        logL_inzbin = np.log10(subcat['I'+line] * (1.04e-3 * subcat['Dlum']**2 * nu / (1 + subcat['redshift']))) 
-                        Vslice = (117*u.deg**2).to(u.sr) / 3 * (cosmo.comoving_distance(z+dz/2)**3-cosmo.comoving_distance(z-dz/2)**3)
-                        histo = np.histogram(logL_inzbin, bins = log_L_bins, range = (5, 12))
-                        LF_list[iz, :]= histo[0] / L_Deltabin / Vslice
-                    dict[f'LF_{line} #solar lum per Mpc3'] = LF_list
             else:
                 print(line+' is not listed in the parameter file for the fir_lines_list keyword, and it will thus be skipped!')
     
@@ -247,20 +231,8 @@ def gen_fir_lines(cat, params):
     kwargs = {'I'+line:Sline}  
     cat = cat.assign(**kwargs)  
 
-    if(params['compute_LF']):
-        LF_list = np.asarray((len(z_list), len(log_L_mean)))
-        for iz, z in enumerate(z_list): 
-            subcat = cat.loc[ (cat['redshift']>z-dz/2) and (cat['redshift']<=z+dz/2)]
-            logL_inzbin = np.log10(subcat['I'+line] * (1.04e-3 * subcat['Dlum']**2 * nu / (1 + subcat['redshift']))) 
-            Vslice = (117*u.deg**2).to(u.sr) / 3 * (cosmo.comoving_distance(z+dz/2)**3-cosmo.comoving_distance(z-dz/2)**3)
-            histo = np.histogram(logL_inzbin, bins = log_L_bins, range = (5, 12))
-            LF_list[iz, :]= histo[0] / L_Deltabin / Vslice
-        dict[f'LF_{line} #solar lum per Mpc3'] = LF_list
-
     tstop = time()
     print('Far-IR line fluxes of ', len(cat), ' galaxies generated in ', tstop-tstart, 's')
-
-    if(params['compute_LF']): pickle.dump(dict, open('FIR_lines_LFs_of_SIDES_Uchuu.p', 'wb'))
 
     return cat
             
