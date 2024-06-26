@@ -15,7 +15,6 @@ z_list = np.arange(0.5,3.0, dz)
 log_L_bins, L_Deltabin, log_L_mean = make_log_bin(5, 12, 20)
 line_list =  ['NeII13', 'NeIII16', 'H2_17', 'SIII19', 'OIV26', 'SIII33', 'SiII35', 'OIII52', 'NIII57', 'OI63', 'OIII88', 'NII122','OI145', 'NII205']
 
-
 Nmax=200; 
 for tile_size in (0.2,1,2,9):
     if(fs<tile_size): continue
@@ -59,6 +58,6 @@ for iz, z in enumerate(z_list):
         logL_inzbin = np.log10(subcat['I'+line] * (1.04e-3 * subcat['Dlum']**2 * nu / (1 + subcat['redshift']))) 
         Vslice = (tile_size*u.deg**2).to(u.sr) / 3 * (cosmo.comoving_distance(z+dz/2)**3-cosmo.comoving_distance(z-dz/2)**3)
         histo, edges = np.histogram(logL_inzbin, bins = log_L_bins, range = (5, 12))
-        LF_list[iline, iz, l, :]= histo / L_Deltabin / Vslice
+        LF_list[iline, iz, :]= histo / L_Deltabin / Vslice
 dict[f'LFs #solar lum per Mpc3'] = LF_list
 pickle.dump(dict, open(f'FIR_lines_LFs_of_SIDES_Uchuu_117deg2.p', 'wb'))
