@@ -74,8 +74,8 @@ def set_wcs(cat,params):
     # compute the dimensions of the three axes
     shape = [np.ceil(zmax).astype(int), np.round(pos[0].max()).astype(int), np.round(pos[1].max()).astype(int) ]
     shape = [i//2*2+1 for i in shape] #force an odd number of pixels to generate better psf
-    x_edges = list(np.linspace(-0.5,shape[2]+0.5,shape[2]+2))
-    y_edges = list(np.linspace(-0.5,shape[1]+0.5,shape[1]+2))
+    x_edges = list(np.linspace(-0.5,shape[2]+0.5,shape[2]+1))
+    y_edges = list(np.linspace(-0.5,shape[1]+0.5,shape[1]+1))
     z_edges = list(np.arange(-0.5, shape[0] + 0.5, 1))
 
     wcs_dict = {}
