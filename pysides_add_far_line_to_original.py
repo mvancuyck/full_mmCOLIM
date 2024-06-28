@@ -7,12 +7,12 @@ from gen_all_sizes_cubes import load_cat
 recompute = False 
 
 params_sides = load_params('PAR/SIDES_from_original_with_fir_lines.par', force_pysides_path = '.')
-#simu, cat, dirpath, fs = load_cat()
-
+simu, cat, dirpath, fs = load_cat()
+'''
 dirpath="/home/mvancuyck/"
 cat = Table.read(dirpath+'pySIDES_from_original.fits')
 cat = cat.to_pandas(); simu = 'bolshoi'; fs=2
-
+'''
 cat = gen_fir_lines(cat, params_sides)
 
 dz=0.05
