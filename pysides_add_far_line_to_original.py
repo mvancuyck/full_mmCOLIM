@@ -49,8 +49,7 @@ for tile_size in (0.2,1,2,9):
                 index_nu = params_sides['fir_lines_list'].index(line)
                 nu = params_sides['fir_lines_nu'][index_nu]
                 vdelt = (cst.c * 1e-3) * dz / (1 + cat['redshift']) #km/s
-                I_list[iline, iz, l,] = (np.sum( subcat['I'+line]/vdelt) / (tile_size*u.deg**2).to(u.sr)).value
-
+                I_list[iline, iz, l] = (np.sum( subcat['I'+line]/vdelt) / (tile_size*u.deg**2).to(u.sr)).value
                 logL_inzbin = np.log10(subcat['I'+line] * (1.04e-3 * subcat['Dlum']**2 * nu / (1 + subcat['redshift']))) 
                 Vslice = (tile_size*u.deg**2).to(u.sr) / 3 * (cosmo.comoving_distance(z+dz/2)**3-cosmo.comoving_distance(z-dz/2)**3)
                 histo = np.histogram(logL_inzbin, bins = log_L_bins, range = (5, 12))
@@ -61,13 +60,14 @@ for tile_size in (0.2,1,2,9):
 
 dict = {'log L #solar lum':log_L_mean, 'z':z_list, 'dz':dz, 'lines':line_list}
 LF_list = np.zeros((len(line_list), len(z_list), len(log_L_mean) ))
+I_list = np.zeros((len(line_list), len(z_list)))
 for iz, z in enumerate(z_list): 
     subcat = cat.loc[ (cat['redshift']>(z-dz/2))&(cat['redshift']<=(z+dz/2))]
     for iline, line in enumerate(line_list):        
         index_nu = params_sides['fir_lines_list'].index(line)
         nu = params_sides['fir_lines_nu'][index_nu]
         vdelt = (cst.c * 1e-3) * dz / (1 + cat['redshift']) #km/s
-        I_list[iline, iz, l,] = ( np.sum( subcat['I'+line]/vdelt) / (117*u.deg**2).to(u.sr)).value
+        I_list[iline, iz] = ( np.sum( subcat['I'+line]/vdelt) / (117*u.deg**2).to(u.sr)).value
         logL_inzbin = np.log10(subcat['I'+line] * (1.04e-3 * subcat['Dlum']**2 * nu / (1 + subcat['redshift']))) 
         Vslice = (117*u.deg**2).to(u.sr) / 3 * (cosmo.comoving_distance(z+dz/2)**3-cosmo.comoving_distance(z-dz/2)**3)
         histo = np.histogram(logL_inzbin, bins = log_L_bins, range = (5, 12))
