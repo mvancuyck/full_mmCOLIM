@@ -7,11 +7,11 @@ from gen_all_sizes_cubes import load_cat
 recompute = False 
 
 params_sides = load_params('PAR/SIDES_from_original_with_fir_lines.par', force_pysides_path = '.')
-simu, cat, dirpath, fs = load_cat()
+#simu, cat, dirpath, fs = load_cat()
 
-#dirpath="/home/mvancuyck/"
-#cat = Table.read(dirpath+'pySIDES_from_original.fits')
-#cat = cat.to_pandas(); simu = 'bolshoi'; fs=2
+dirpath="/home/mvancuyck/"
+cat = Table.read(dirpath+'pySIDES_from_original.fits')
+cat = cat.to_pandas(); simu = 'bolshoi'; fs=2
 
 cat = gen_fir_lines(cat, params_sides)
 
@@ -49,7 +49,7 @@ for tile_size in (0.2,1,2,9):
                 index_nu = params_sides['fir_lines_list'].index(line)
                 nu = params_sides['fir_lines_nu'][index_nu]
                 vdelt = (cst.c * 1e-3) * dz / (1 + cat['redshift']) #km/s
-                I_list[iline, iz, l,] = np.sum( subcat['I'+line]/vdelt) / (tile_size*u.deg**2).to(u.sr)
+                I_list[iline, iz, l,] = (np.sum( subcat['I'+line]/vdelt) / (tile_size*u.deg**2).to(u.sr)).value
 
                 logL_inzbin = np.log10(subcat['I'+line] * (1.04e-3 * subcat['Dlum']**2 * nu / (1 + subcat['redshift']))) 
                 Vslice = (tile_size*u.deg**2).to(u.sr) / 3 * (cosmo.comoving_distance(z+dz/2)**3-cosmo.comoving_distance(z-dz/2)**3)
@@ -67,7 +67,7 @@ for iz, z in enumerate(z_list):
         index_nu = params_sides['fir_lines_list'].index(line)
         nu = params_sides['fir_lines_nu'][index_nu]
         vdelt = (cst.c * 1e-3) * dz / (1 + cat['redshift']) #km/s
-        I_list[iline, iz, l,] = np.sum( subcat['I'+line]/vdelt) / (117*u.deg**2).to(u.sr)
+        I_list[iline, iz, l,] = ( np.sum( subcat['I'+line]/vdelt) / (117*u.deg**2).to(u.sr)).value
         logL_inzbin = np.log10(subcat['I'+line] * (1.04e-3 * subcat['Dlum']**2 * nu / (1 + subcat['redshift']))) 
         Vslice = (117*u.deg**2).to(u.sr) / 3 * (cosmo.comoving_distance(z+dz/2)**3-cosmo.comoving_distance(z-dz/2)**3)
         histo = np.histogram(logL_inzbin, bins = log_L_bins, range = (5, 12))
