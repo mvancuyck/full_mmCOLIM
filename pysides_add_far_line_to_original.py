@@ -21,7 +21,7 @@ log_L_bins, L_Deltabin, log_L_mean = make_log_bin(5, 12, 20)
 line_list =  ['NeII13', 'NeIII16', 'H2_17', 'SIII19', 'OIV26', 'SIII33', 'SiII35', 'OIII52', 'NIII57', 'OI63', 'OIII88', 'NII122','OI145', 'NII205']
 
 Nmax=200; 
-for tile_size in (0.2,1,2,9):
+for tile_size in (9,): #0.2,1,2,
     if(fs<tile_size): continue
 
     ragrid=np.arange(cat['ra'].min(),cat['ra'].max(),np.sqrt(tile_size))
