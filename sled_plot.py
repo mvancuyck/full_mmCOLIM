@@ -80,7 +80,7 @@ def compute_sled_cat(z_list, dz_list, simu = 'uchuu', recompute = False):
                         I_dict[iz, idz, j,13] = (cat_line[f"I{line}"]/cat_line[f"ICO10"]).median() #Jy.km/s
                         I_dict[iz, idz, j,14] =  np.quantile(cat_line[f"I{line}"]/cat_line[f"ICO10"],0.25)
                         I_dict[iz, idz, j,15] =  np.quantile(cat_line[f"I{line}"]/cat_line[f"ICO10"],0.75)
-                        
+
                         I_dict[iz, idz, j,16] =  len(cat_line)
 
                         bar.next() 
@@ -102,7 +102,7 @@ def plot_sled_fig(nslice, z_list, dz_list, recompute_sleds, toembed=False, dtype
     '''
 
 
-    I_dict, ms_I, sb_I = compute_sled_cat(z_list, dz_list, simu = 'bolshoi', recompute = recompute_sleds)
+    I_dict, ms_I, sb_I = compute_sled_cat(z_list, dz_list, simu = 'uchuu', recompute = recompute_sleds)
     SLED_mes = co_sled_from_nsubfields(nslice, 2, z_list, dz_list, 9, 0.15, dtype=dtype, toembed=toembed)
 
     dict = {'SLED_mes':SLED_mes}
