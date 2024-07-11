@@ -28,7 +28,7 @@ def compute_sled_cat(z_list, dz_list, simu = 'uchuu', recompute = False):
 
             name_I = f'dict_dir/I_mean_of_uchuu_n0_{type}.npy'
             #Compute the mean brighness of CO transitions up to J=8 with different ways for each redshift interval
-            I_dict = np.zeros((len(z_list), len(dz_list), 8,16))
+            I_dict = np.zeros((len(z_list), len(dz_list), 8,17))
 
             for iz, z in enumerate(z_list):
                 for idz, dz in enumerate(dz_list):
@@ -80,6 +80,9 @@ def compute_sled_cat(z_list, dz_list, simu = 'uchuu', recompute = False):
                         I_dict[iz, idz, j,13] = (cat_line[f"I{line}"]/cat_line[f"ICO10"]).median() #Jy.km/s
                         I_dict[iz, idz, j,14] =  np.quantile(cat_line[f"I{line}"]/cat_line[f"ICO10"],0.25)
                         I_dict[iz, idz, j,15] =  np.quantile(cat_line[f"I{line}"]/cat_line[f"ICO10"],0.75)
+                        
+                        I_dict[iz, idz, j,16] =  len(cat_line)
+
                         bar.next() 
 
             np.save(name_I, np.asarray(I_dict), 'wb')  
