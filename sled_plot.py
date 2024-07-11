@@ -13,6 +13,7 @@ from pysides.load_params import *
  
 def compute_sled_cat(z_list, dz_list, simu = 'uchuu', recompute = False):
     #choose the type of frequency interval: fixe for one transition of fix redshift interval for all transitions
+
     if(recompute):
 
         if(simu == 'bolshoi'): 
@@ -103,7 +104,7 @@ def plot_sled_fig(nslice, z_list, dz_list, recompute_sleds, toembed=False, dtype
 
     dict = {'SLED_mes':SLED_mes}
     pickle.dump(dict, open(f'dict_dir/SLED_mes_9deg2_dtype{dtype}.p', 'wb'))
-
+    print(line_list)
     for idz, dz in enumerate(dz_list):
 
         BS=10; plt.rc('font', size=BS); plt.rc('axes', titlesize=BS); plt.rc('axes', labelsize=BS); lw=1; mk=5; elw=1
@@ -115,27 +116,24 @@ def plot_sled_fig(nslice, z_list, dz_list, recompute_sleds, toembed=False, dtype
         patch = mlines.Line2D([], [], color='k', linestyle='None', marker='o', label=f'from cross-power \n spectra')
         patchs.append(patch)
 
-
         #--- SLED from Catalog ---
         
-        for zi, (z, c, shift) in enumerate(zip(z_list,  cm.cividis(np.linspace(0.,1,len(z_list))),  (-0.2, -0.1, 0, 0.1, 0.2, 0.3))): #(-0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3, 0.4),
+        for zi, (z, c, shift) in enumerate(zip(z_list,  cm.viridis(np.linspace(0.,0.8,len(z_list))),  (-0.2, -0.1, 0, 0.1, 0.2, 0.3))): #(-0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3, 0.4),
             J_list = np.arange(I_dict.shape[2])+1
             N=6; M=N+1
 
             ax.errorbar(J_list+shift, np.mean(SLED_mes[:, zi, idz, 1:], axis=0), yerr=np.std(SLED_mes[:, zi, idz, 1:], axis=0), 
                         fmt='o', color=c, ecolor=c, lw=1, markersize=2)
-            print('')
-            print('')
-            print('z=',z, 100*np.std(SLED_mes[:, zi, idz, 1:], axis=0)/ np.mean(SLED_mes[:, zi, idz, 1:], axis=0))
-            print('')
-            print('')
+
+
             ax.errorbar(     J_list+shift, I_dict[zi, idz, :,N], color=c, ecolor=c, lw=1)
             ax.fill_between( J_list+shift, I_dict[zi, idz, :,N] - I_dict[zi, idz, :, M], 
                                      I_dict[zi, idz, :,N] + I_dict[zi, idz, :, M], 
-                                     color=c, alpha=0.3 )
+                                     color=c, alpha=0.2 )
             
             axr.errorbar(J_list+shift, np.mean(SLED_mes[:, zi, idz, 1:], axis=0) / I_dict[zi, idz, :,N]-1, 
                          yerr=np.std(SLED_mes[:, zi, idz, 1:], axis=0) / I_dict[zi, idz, :,N], fmt='o', c=c, markersize=2, lw=1)
+            print('z=',z,',', np.round(np.std(SLED_mes[:, zi, idz, 1:], axis=0) / I_dict[zi, idz, :,N], 2),)
 
             patch = mpatches.Patch(color=c, label=f'z={z}')
             patchs.append(patch)
@@ -145,35 +143,32 @@ def plot_sled_fig(nslice, z_list, dz_list, recompute_sleds, toembed=False, dtype
         ax.set_ylim(0,3)
         #---------------------------
         axr.set_ylim(-0.5,1)
-        if(nslice==2.0): axr.set_ylim(-0.2,0.2)
+        if(nslice==2.0): axr.set_ylim(-0.4,0.4)
 
         axr.plot((0,9), np.zeros(2), c='grey', lw=lw)
         axr.set_ylabel("relative \n difference")
         axr.set_xlabel("Quantum rotational number $\\rm J_{up}$")
         axr.set_xlim(0.5, 8.5)
-        axr.tick_params(axis = "x", which='major', tickdir = "inout", top = True, color='k')
+        #axr.tick_params(axis = "x", which='major', tickdir = "inout", top = True, color='k')
         fig.tight_layout(); fig.subplots_adjust(hspace=.0)
         for extension in ("png", "pdf"): plt.savefig(f"sled_dz{dz}_nslice{nslice}.{extension}", transparent=True)
 
-
+        #plot without catalogue lines and shaded areas. 
+        '''
         BS=10; plt.rc('font', size=BS); plt.rc('axes', titlesize=BS); plt.rc('axes', labelsize=BS); lw=1; mk=5; elw=1
         fig, (ax, axr) = plt.subplots(2, 1, sharex=True, sharey = 'row', gridspec_kw={'height_ratios': [2,1]}, figsize=(4,4), dpi = 200)
-
         patchs = []
         patch = mlines.Line2D([], [], color='k', linestyle='solid',  label='Mean SLED')
         patchs.append(patch)
         patch = mlines.Line2D([], [], color='k', linestyle='None', marker='o', label=f'from cross-power \n spectra')
         patchs.append(patch)       
-        for zi, (z, c, shift) in enumerate(zip(z_list,  cm.cividis(np.linspace(0.,1,len(z_list))),  (-0.2, -0.1, 0, 0.1, 0.2, 0.3))): #(-0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3, 0.4),
+        for zi, (z, c, shift) in enumerate(zip(z_list,  cm.viridis(np.linspace(0.,0.8,len(z_list))),  (-0.2, -0.1, 0, 0.1, 0.2, 0.3))): #(-0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3, 0.4),
             J_list = np.arange(I_dict.shape[2])+1
             N=6; M=N+1
 
             ax.errorbar(J_list+shift, np.mean(SLED_mes[:, zi, idz, 1:], axis=0), yerr=np.std(SLED_mes[:, zi, idz, 1:], axis=0), 
                         fmt='o', color=c, ecolor=c, lw=1, markersize=2)
             
-            
-            
-
             patch = mpatches.Patch(color=c, label=f'z={z}')
             patchs.append(patch)
         #---------------------------
@@ -191,6 +186,7 @@ def plot_sled_fig(nslice, z_list, dz_list, recompute_sleds, toembed=False, dtype
         axr.tick_params(axis = "x", which='major', tickdir = "inout", top = True, color='k')
         fig.tight_layout(); fig.subplots_adjust(hspace=.0)
         for extension in ("png", "pdf"): plt.savefig(f"sled_dtype{dtype}_dz{dz}_nslice{nslice}_ppoints.{extension}", transparent=True)
+        '''
 
 def contrib_ms_sb(z_list, dz_list, recompute_sleds): 
 
@@ -211,7 +207,7 @@ def contrib_ms_sb(z_list, dz_list, recompute_sleds):
         plt.legend(handles = patchs, loc='center left', bbox_to_anchor=(1.05, 0.5), fontsize=BS)
         plt.xlabel('redshift')
         plt.yscale("log")
-        plt.ylabel('Contribution of SB objects to $\\rm I_{J_{up}}$ [%]')
+        plt.ylabel('Contribution of SB objects \n to $\\rm B_{\\nu}^{CO(J_{up}-J_{up}-1}$ [%]')
         plt.tight_layout()
         for extension in ("png", "pdf"): plt.savefig(f"figs/sb_ms.{extension}", transparent=True)
         
@@ -295,12 +291,14 @@ if __name__ == "__main__":
     #With SIDES Bolshoi, for rapid tests. 
     tim_params = load_params('PAR/cubes.par')
     z_list = tim_params['z_list']
-    dzlist = tim_params['dz_list']
+    dz_list = tim_params['dz_list']
     n_list = tim_params['n_list']
 
-    if(True):
-        for nslice, dz, toembed in zip(n_list, dzlist, (False, False, False)):
+    if(False):
+        for nslice, dz, toembed in zip(n_list, dz_list, (False, False, False)):
             plot_sled_fig(nslice, z_list, (dz,), args.recompute_sleds, toembed=toembed)
             plt.show()
 
-    if(False): contrib_ms_sb(z_list, dz_list, args.recompute_sleds)
+    if(True): 
+        for nslice, dz in zip(n_list, dz_list):
+            contrib_ms_sb(z_list, (dz*(nslice*2+1),), args.recompute_sleds)
