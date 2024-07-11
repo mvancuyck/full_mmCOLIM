@@ -21,7 +21,7 @@ def compute_sled_cat(z_list, dz_list, simu = 'uchuu', recompute = False):
             dirpath="/home/mvancuyck/"
             cat = Table.read(dirpath+'pySIDES_from_original.fits')
             cat = cat.to_pandas(); simu = 'bolshoi'
-            
+
         else: simu, cat, cat_path, fs = load_cat()
 
         bar = Bar('computing SLED from catalog', max=len(z_list)*len(dz_list)*8*3)  
@@ -194,7 +194,7 @@ def plot_sled_fig(nslice, z_list, dz_list, recompute_sleds, toembed=False, dtype
 
 def contrib_ms_sb(z_list, dz_list, recompute_sleds): 
 
-    all_I, ms_I, sb_I = compute_sled_cat(z_list, dz_list, simu = 'bolshoi', recompute = recompute_sleds)
+    all_I, ms_I, sb_I = compute_sled_cat(z_list, dz_list, simu = 'uchuu', recompute = recompute_sleds)
 
     for idz, dz in enumerate(dz_list):
         #---------------------------
