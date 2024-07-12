@@ -145,4 +145,4 @@ dz_list = tim_params['dz_list']
 n_list = tim_params['n_list']
 
 for i, (dz, nslice) in enumerate(zip(dz_list, n_list)): 
-    CO10_LF(z_list, 0.1)
+    CO10_LF(z_list, 0.25)
