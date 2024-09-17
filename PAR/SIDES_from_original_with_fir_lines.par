@@ -11,7 +11,6 @@ gen_pickle = False
 
 compute_LF = True
 
-
 ##### Parameters used to generate SFR properties #####
 
 #Parameters to derive the quenched fraction
