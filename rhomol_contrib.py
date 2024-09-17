@@ -17,7 +17,6 @@ def mol_gas_density(cat, Vslice, alpha_co):
     Lprim =  np.sum(cat['ICO10'] * (cat["Dlum"]**2) * 3.25e7 / (1+cat["redshift"])**3 / nu_obs**2)
     return alpha_co * Lprim / Vslice.value       
     
-print("let's start")    
 params = load_params('PAR/cubes.par')
 params['output_path'] = '/net/CONCERTO/home/mvancuyck/TIM_pysides_user_friendly/OUTPUT_TIM_CUBES_FROM_UCHUU/'
 
@@ -40,6 +39,7 @@ for tile_sizeRA, tile_sizeDEC, Nsimu in params['tile_sizes']:
         
         cat = Table.read(params["output_path"]+f"pySIDES_from_uchuu_tile_{l}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg.fits")
         cat = cat.to_pandas()
+        print(len(cat.loc[cat['issb'] == False]), len(cat.loc[cat['issb'] == True]))
 
         dict_tile = {}
 
@@ -48,7 +48,6 @@ for tile_sizeRA, tile_sizeDEC, Nsimu in params['tile_sizes']:
             Dz = dz_list[0] * n_list[0]
             Vslice = field_size / 3 * (cosmo.comoving_distance(z+Dz/2)**3-cosmo.comoving_distance(z-Dz/2)**3)
             #embed()
-            print(len(cat.loc[cat['issb'] == False]), len(cat.loc[cat['issb'] == True]))
             #rho_MS = mol_gas_density(cat.loc[cat['issb'] == False], Vslice, params['alpha_co_ms'])
             #rho_SB = mol_gas_density(cat.loc[cat['issb'] == True],  Vslice, params['alpha_co_sb'])
             #dict_tile[f'rho_mol_MS_at_{z}'] = rho_MS
