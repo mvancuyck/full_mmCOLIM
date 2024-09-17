@@ -213,11 +213,14 @@ if __name__ == "__main__":
     #e.g: python gen_cubes_TIM_cubes_117deg2_uchuu.py 'outputs_uchuu/' 'uchuu'
     #will generate the 117deg2 SIDES-Uchuu maps around z+-dz/2 and saves them in outputs_uchuu
 
+
+    '''
     parser = argparse.ArgumentParser(description="gen cubes from Uchuu",
                                      formatter_class = argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('output_path', help="output path of products", default = '.')
     args = parser.parse_args()
     output_path = args.output_path
+    '''
 
     #simu, cat, dirpath, fs = load_cat()
 
