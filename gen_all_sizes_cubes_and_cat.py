@@ -5,6 +5,7 @@ from pysides.make_cube import *
 from pysides.load_params import *
 from pysides.gen_outputs import *
 
+
 import argparse
 import time
 import matplotlib
@@ -23,32 +24,6 @@ line_list.append('CII_de_Looze')
 #Paralelisation on 24 nodes
 #----
 
-def sorted_files_by_n(directory, tile_sizes):
-    # List all files in the directory
-    files = os.listdir(directory)
-    
-    sorted_files = []
-    
-    for tile_sizeRA, tile_sizeDEC in tile_sizes:
-        # Define the regex pattern to match the files and extract 'n'
-        pattern = re.compile(f'pySIDES_from_uchuu_tile_(\d+)_({tile_sizeRA}deg_x_{tile_sizeDEC}deg)\.fits')
-        
-        # Create a list of tuples (n, filename)
-        files_with_n = []
-        for filename in files:
-            match = pattern.match(filename)
-            if match:
-                n = int(match.group(1))
-                files_with_n.append((n, filename))
-        
-        # Sort the list by the value of 'n'
-        files_with_n.sort(key=lambda x: x[0])
-        
-        # Extract the sorted filenames
-        sorted_filenames = [filename for n, filename in files_with_n]
-        sorted_files.extend(sorted_filenames)
-    
-    return sorted_files
 
 def load_cat():
 
