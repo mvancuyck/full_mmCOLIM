@@ -29,7 +29,7 @@ def load_cat():
     matplotlib.use("Agg")
     start = time.time()
     
-    cats_dir_path='/data/SIDES/PYSIDES_UCHUU_OUTPUTS/vpeak_complete/'
+    cats_dir_path='/net/CONCERTO/SIDES/PYSIDES_UCHUU_OUTPUTS/vpeak_complete'
     
     filenames=[]
     with os.scandir(cats_dir_path) as it:
@@ -55,6 +55,10 @@ def load_cat():
     
     return 'pySIDES_from_uchuu', cat, cats_dir_path, int(117) #cube_gal_params_file, cube_params_file, params_sides_file, 
 
+def sorted_files_by_n(directory, tile_sizes):
+    # List all files in the directory
+    files = os.listdir(directory)
+    
 def worker_init(*args):
     global _args
     _args = args
@@ -224,6 +228,7 @@ if __name__ == "__main__":
     cat = cat.to_pandas()
     simu='pySIDES_from_bolshoi'; fs=2
     '''
+
     params = load_params('PAR/cubes.par')
     params['output_path'] = 'outputs_cubes/'
 
