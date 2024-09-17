@@ -29,7 +29,7 @@ def load_cat():
     matplotlib.use("Agg")
     start = time.time()
     
-    cats_dir_path='/net/CONCERTO/SIDES/PYSIDES_UCHUU_OUTPUTS/vpeak_complete'
+    cats_dir_path='/net/CONCERTO/SIDES/PYSIDES_UCHUU_OUTPUTS/vpeak_complete/'
     
     filenames=[]
     with os.scandir(cats_dir_path) as it:
