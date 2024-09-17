@@ -19,36 +19,6 @@ def mol_gas_density(cat, Vslice, alpha_co):
 import re
 import glob
 
-
-def sorted_files_by_n(directory, tile_sizes):
-    # List all files in the directory
-    files = os.listdir(directory)
-    
-    sorted_files = []
-    
-    for tile_sizeRA, tile_sizeDEC in tile_sizes:
-        # Define the regex pattern to match the files and extract 'n'
-        pattern = re.compile(f'pySIDES_from_uchuu_tile_(\d+)_({tile_sizeRA}deg_x_{tile_sizeDEC}deg)\.fits')
-        
-        # Create a list of tuples (n, filename)
-        files_with_n = []
-        for filename in files:
-            match = pattern.match(filename)
-            if match:
-                n = int(match.group(1))
-                files_with_n.append((n, filename))
-        
-        # Sort the list by the value of 'n'
-        files_with_n.sort(key=lambda x: x[0])
-        
-        # Extract the sorted filenames
-        sorted_filenames = [filename for n, filename in files_with_n]
-        sorted_files.extend(sorted_filenames)
-    
-    return sorted_files
-
-
-
 params = load_params('PAR/cubes.par')
 params['output_path'] = '/net/CONCERTO/home/mvancuyck/TIM_pysides_user_friendly/OUTPUT_TIM_CUBES_FROM_UCHUU/'
 
@@ -58,18 +28,16 @@ n_list = params['n_list']
 
 dict = {}
 
-for tile_sizeRA, tile_sizeDEC in params['tile_sizes']: 
+for tile_sizeRA, tile_sizeDEC, Nsimu in zip(params['tile_sizes'], (12, 70)): 
 
     dict_fieldsize = {}
-    embed()
     
     # List files matching the pattern
-    files = sorted_files_by_n(params["output_path"], ((tile_sizeRA, tile_sizeDEC),))
     field_size = (tile_sizeRA * tile_sizeDEC *u.deg**2).to(u.sr)
     
-    for l, file in enumerate(files):
+    for l in range(Nsimu):
         
-        cat = Table.read(params["output_path"]+file)
+        cat = Table.read(params["output_path"]+f"pySIDES_from_uchuu_tile_{l}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg.fits")
         cat = cat.to_pandas()
 
         dict_tile = {}
