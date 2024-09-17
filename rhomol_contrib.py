@@ -47,19 +47,19 @@ for tile_sizeRA, tile_sizeDEC, Nsimu in params['tile_sizes']:
 
             Dz = dz_list[0] * n_list[0]
             Vslice = field_size / 3 * (cosmo.comoving_distance(z+Dz/2)**3-cosmo.comoving_distance(z-Dz/2)**3)
-            embed()
-            rho_MS = mol_gas_density(cat.loc[cat['issb'] == False], Vslice, params['alpha_co_ms'])
-            rho_SB = mol_gas_density(cat.loc[cat['issb'] == True],  Vslice, params['alpha_co_sb'])
-
-            dict_tile[f'rho_mol_MS_at_{z}'] = rho_MS
-            dict_tile[f'rho_mol_SB_at_{z}'] = rho_SB
+            #embed()
+            print(len(cat.loc[cat['issb'] == False]), len(cat.loc[cat['issb'] == True]))
+            #rho_MS = mol_gas_density(cat.loc[cat['issb'] == False], Vslice, params['alpha_co_ms'])
+            #rho_SB = mol_gas_density(cat.loc[cat['issb'] == True],  Vslice, params['alpha_co_sb'])
+            #dict_tile[f'rho_mol_MS_at_{z}'] = rho_MS
+            #dict_tile[f'rho_mol_SB_at_{z}'] = rho_SB
     
-        dict_fieldsize[f'{l}'] = dict_tile
+        #dict_fieldsize[f'{l}'] = dict_tile
         bar.next() 
 
     bar.finish
 
-    dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'] = dict_fieldsize
+    #dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'] = dict_fieldsize
 
 pickle.dump(dict, open(f"dict_dir/rhomol_alphacoMS{params['alpha_co_ms']}_alphaCOSB{params['alpha_co_sb']}.p", 'wb'))
 #dict = pickle.load( open(file, 'rb'))
