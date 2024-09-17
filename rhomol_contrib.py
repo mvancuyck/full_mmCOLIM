@@ -15,7 +15,6 @@ def mol_gas_density(cat, Vslice, alpha_co):
     Lprim =  np.sum(cat['ICO10'] * (cat["Dlum"]**2) * 3.25e7 / (1+cat["redshift"])**3 / nu_obs**2)
     return alpha_co * Lprim / Vslice.value       
     
-params_sides = load_params('PAR/SIDES_from_original_with_fir_lines.par')
 params = load_params('PAR/cubes.par')
 params['output_path'] = '/net/CONCERTO/home/mvancuyck/TIM_pysides_user_friendly/OUTPUT_TIM_CUBES_FROM_UCHUU/'
 
@@ -26,9 +25,9 @@ n_list = params['n_list']
 dict = {}
 
 for tile_sizeRA, tile_sizeDEC in params['tile_sizes']: 
-    if(tile_sizeDEC == 9): continue
 
     dict_fieldsize = {}
+    embed()
     
     # List files matching the pattern
     files = sorted_files_by_n(params["output_path"], ((tile_sizeRA, tile_sizeDEC),))
