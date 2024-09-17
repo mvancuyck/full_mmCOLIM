@@ -9,6 +9,8 @@ import argparse
 import time
 import matplotlib
 from IPython import embed
+from progress.bar import Bar
+
 
 def mol_gas_density(cat, Vslice, alpha_co):
     nu_obs = 115.27120180 / (1+cat['redshift'])
@@ -35,6 +37,8 @@ for tile_sizeRA, tile_sizeDEC, Nsimu in params['tile_sizes']:
     # List files matching the pattern
     field_size = (tile_sizeRA * tile_sizeDEC *u.deg**2).to(u.sr)
     
+    bar = Bar(f'computing rho for {tile_sizeRA}x{tile_sizeDEC}deg2', max=l)  
+
     for l in range(Nsimu):
         
         cat = Table.read(params["output_path"]+f"pySIDES_from_uchuu_tile_{l}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg.fits")
@@ -54,6 +58,9 @@ for tile_sizeRA, tile_sizeDEC, Nsimu in params['tile_sizes']:
             dict_tile[f'rho_mol_SB_at_{z}'] = rho_SB
     
         dict_fieldsize[f'{l}'] = dict_tile
+        bar.next() 
+
+    bar.finish
 
     dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'] = dict_fieldsize
 
