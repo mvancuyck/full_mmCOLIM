@@ -219,15 +219,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
     output_path = args.output_path
 
-    simu, cat, dirpath, fs = load_cat()
+    #simu, cat, dirpath, fs = load_cat()
 
     #With SIDES Bolshoi, for rapid tests. 
-    ''' 
+    
     dirpath="/home/mvancuyck/"
     cat = Table.read(dirpath+'pySIDES_from_original.fits')
     cat = cat.to_pandas()
     simu='pySIDES_from_bolshoi'; fs=2
-    '''
+
 
     params = load_params('PAR/cubes.par')
     params['output_path'] = 'outputs_cubes/'
