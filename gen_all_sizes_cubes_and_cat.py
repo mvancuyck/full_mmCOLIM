@@ -228,11 +228,10 @@ if __name__ == "__main__":
     cat = cat.to_pandas()
     simu='pySIDES_from_bolshoi'; fs=2
 
-
     params = load_params('PAR/cubes.par')
-    params['output_path'] = 'outputs_cubes/'
+    params['output_path'] = '/net/CONCERTO/home/mvancuyck/TIM_pysides_user_friendly/OUTPUT_TIM_CUBES_FROM_UCHUU/'
     pars = load_params('PAR/SIDES_from_original_with_fir_lines.par')
-
+    pars['output_path'] = params['output_path']
     for tile_sizeRA, tile_sizeDEC in params['tile_sizes']: 
 
         if(fs<tile_sizeRA*tile_sizeDEC): continue
