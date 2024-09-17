@@ -223,7 +223,7 @@ if __name__ == "__main__":
 
     #With SIDES Bolshoi, for rapid tests. 
     
-    dirpath="/home/mvancuyck/"
+    dirpath="/net/CONCERTO/home/mvancuyck/"
     cat = Table.read(dirpath+'pySIDES_from_original.fits')
     cat = cat.to_pandas()
     simu='pySIDES_from_bolshoi'; fs=2
