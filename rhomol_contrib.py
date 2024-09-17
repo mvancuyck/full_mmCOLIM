@@ -17,10 +17,7 @@ def mol_gas_density(cat, Vslice, alpha_co):
     Lprim =  np.sum(cat['ICO10'] * (cat["Dlum"]**2) * 3.25e7 / (1+cat["redshift"])**3 / nu_obs**2)
     return alpha_co * Lprim / Vslice.value       
     
-
-import re
-import glob
-
+print("let's start")    
 params = load_params('PAR/cubes.par')
 params['output_path'] = '/net/CONCERTO/home/mvancuyck/TIM_pysides_user_friendly/OUTPUT_TIM_CUBES_FROM_UCHUU/'
 
