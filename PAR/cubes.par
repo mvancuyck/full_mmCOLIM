@@ -11,7 +11,7 @@ n_list = (2.0,) #(0.0, 2.0, 1.0)
 alpha_co_ms = 4 #M⊙(K.km.s⁻¹.pc²)⁻¹
 alpha_co_sb = 0.8 #M⊙(K.km.s⁻¹.pc²)⁻¹
 
-tile_sizes = [ (1.5, 1.5, 70),(9, 9, 12),]
+tile_sizes = [ (9, 9, 12),(1.5, 1.5, 70),]
 Nmax = 100
 
 
