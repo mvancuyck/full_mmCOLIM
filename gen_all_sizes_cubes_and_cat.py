@@ -231,6 +231,7 @@ if __name__ == "__main__":
 
     params = load_params('PAR/cubes.par')
     params['output_path'] = 'outputs_cubes/'
+    pars = load_params('PAR/SIDES_from_original_with_fir_lines.par')
 
     for tile_sizeRA, tile_sizeDEC in params['tile_sizes']: 
 
@@ -252,7 +253,7 @@ if __name__ == "__main__":
             cat_subfield=cat.loc[(cat['ra']>=grid[0,idec,ira])&(cat['ra']<grid[0,idec,ira+1])&(cat['dec']>=grid[1,idec,ira])&(cat['dec']<grid[1,idec+1,ira])]
             params['run_name'] = f'{simu}_tile_{l}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg'
 
-            gen_outputs(cat_subfield, params)
+            gen_outputs(cat_subfield, pars)
 
             for J, rest_freq in zip(line_list, rest_freq_list):
                 print('')
