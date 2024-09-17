@@ -37,7 +37,7 @@ for tile_sizeRA, tile_sizeDEC, Nsimu in params['tile_sizes']:
     # List files matching the pattern
     field_size = (tile_sizeRA * tile_sizeDEC *u.deg**2).to(u.sr)
     
-    bar = Bar(f'computing rho for {tile_sizeRA}x{tile_sizeDEC}deg2', max=l)  
+    bar = Bar(f'computing rho for {tile_sizeRA}x{tile_sizeDEC}deg2', max=Nsimu)  
 
     for l in range(Nsimu):
         
