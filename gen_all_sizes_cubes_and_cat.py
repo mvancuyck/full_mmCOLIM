@@ -221,6 +221,7 @@ if __name__ == "__main__":
     '''
 
     simu, cat, dirpath, fs = load_cat()
+    embed()
 
     #With SIDES Bolshoi, for rapid tests. 
     '''
@@ -233,7 +234,7 @@ if __name__ == "__main__":
     params['output_path'] = '/net/CONCERTO/home/mvancuyck/TIM_pysides_user_friendly/OUTPUT_TIM_CUBES_FROM_UCHUU/'
     pars = load_params('PAR/SIDES_from_original_with_fir_lines.par')
     pars['output_path'] = params['output_path']
-    for tile_sizeRA, tile_sizeDEC in params['tile_sizes']: 
+    for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
 
         if(fs<tile_sizeRA*tile_sizeDEC): continue
 
