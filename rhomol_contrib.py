@@ -28,7 +28,7 @@ n_list = params['n_list']
 
 dict = {}
 
-for tile_sizeRA, tile_sizeDEC, Nsimu in zip(params['tile_sizes'], (12, 70)): 
+for (tile_sizeRA, tile_sizeDEC), Nsimu in zip(params['tile_sizes'], (12, 70)): 
 
     dict_fieldsize = {}
     
