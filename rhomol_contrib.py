@@ -17,7 +17,7 @@ def mol_gas_density(cat, Vslice, alpha_co):
     
 params_sides = load_params('PAR/SIDES_from_original_with_fir_lines.par')
 params = load_params('PAR/cubes.par')
-params['output_path'] = 'outputs_cubes/'
+params['output_path'] = '/net/CONCERTO/home/mvancuyck/TIM_pysides_user_friendly/OUTPUT_TIM_CUBES_FROM_UCHUU/'
 
 z_list = params['z_list']
 dz_list = params['dz_list']
@@ -26,6 +26,7 @@ n_list = params['n_list']
 dict = {}
 
 for tile_sizeRA, tile_sizeDEC in params['tile_sizes']: 
+    if(tile_sizeDEC == 9): continue
 
     dict_fieldsize = {}
     
