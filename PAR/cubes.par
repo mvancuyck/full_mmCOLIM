@@ -8,6 +8,13 @@ dz_list = (0.05,) #(0.1, 0.05, 0.05)
 #if n=0, makes a single map. if n>0, makes a cube centered on z constituted of n maps of width dz. 
 n_list = (2.0,) #(0.0, 2.0, 1.0) 
 
+alpha_co_ms = 4 #M⊙(K.km.s⁻¹.pc²)⁻¹
+alpha_co_sb = 0.8 #M⊙(K.km.s⁻¹.pc²)⁻¹
+
+tile_sizes = [(1.5, 1.5), (9, 9), (1,1)]
+Nmax = 100
+
+
 #####Cubes making parameters#####
 
 sides_cat_path = "/data/SIDES/PYSIDES_UCHUU_OUTPUTS/vpeak_complete/pySIDES_from_uchuu_tile_12_2.fits"
