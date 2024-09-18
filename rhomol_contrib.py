@@ -34,12 +34,11 @@ for tile_sizeRA, tile_sizeDEC, Nsimu in params['tile_sizes']:
     
     bar = Bar(f'computing rho_mol(z) for {tile_sizeRA}x{tile_sizeDEC}deg2', max=Nsimu)  
 
-    tab = np.zeros(Nsimu, len(z_list), 2 )
+    tab = np.zeros((Nsimu, len(z_list), 2 ))
 
     for l in range(Nsimu):
         
         cat = Table.read(params["output_path"]+f"pySIDES_from_uchuu_tile_{l}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg.fits")
-        if(not 'ISSB' in list(cat.columns)): continue
         cat = cat.to_pandas()
         dict_tile = {}
 
@@ -50,8 +49,8 @@ for tile_sizeRA, tile_sizeDEC, Nsimu in params['tile_sizes']:
         
             rho_MS = mol_gas_density(cat.loc[cat['ISSB'] == 0], Vslice, params['alpha_co_ms'])
             rho_SB = mol_gas_density(cat.loc[cat['ISSB'] == 1], Vslice, params['alpha_co_sb'])
-            dict_tile[f'rho_mol_MS_at_{z}'] = rho_MS
-            dict_tile[f'rho_mol_SB_at_{z}'] = rho_SB
+            dict_tile[f'rho_mol_MS_at_z{z}'] = rho_MS
+            dict_tile[f'rho_mol_SB_at_z{z}'] = rho_SB
             tab[l,iz,0] = rho_MS
             tab[l,iz,1] = rho_SB
     
