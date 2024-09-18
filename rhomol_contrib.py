@@ -37,10 +37,8 @@ for tile_sizeRA, tile_sizeDEC, Nsimu in params['tile_sizes']:
     for l in range(Nsimu):
         
         cat = Table.read(params["output_path"]+f"pySIDES_from_uchuu_tile_{l}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg.fits")
+        if(not 'ISSB' in list(cat.columns)): continue
         cat = cat.to_pandas()
-        print('')
-        print(len(cat.loc[cat['ISSB'] == 1]), len(cat.loc[cat['ISSB'] == 0]))
-        print('')
         dict_tile = {}
 
         for z in z_list: 
