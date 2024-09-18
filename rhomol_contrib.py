@@ -33,20 +33,21 @@ for tile_sizeRA, tile_sizeDEC, Nsimu in params['tile_sizes']:
     # List files matching the pattern
     field_size = (tile_sizeRA * tile_sizeDEC *u.deg**2).to(u.sr)
     
-    bar = Bar(f'computing rho for {tile_sizeRA}x{tile_sizeDEC}deg2', max=Nsimu)  
+    bar = Bar(f'computing rho_mol(z) for {tile_sizeRA}x{tile_sizeDEC}deg2', max=Nsimu)  
 
     for l in range(Nsimu):
         
         cat = Table.read(params["output_path"]+f"pySIDES_from_uchuu_tile_{l}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg.fits")
         cat = cat.to_pandas()
+        print('')
         print(len(cat.loc[cat['issb'] == False]), len(cat.loc[cat['issb'] == True]))
-
+        print('')
         dict_tile = {}
 
         for z in z_list: 
 
             Dz = dz_list[0] * n_list[0]
-            Vslice = field_size / 3 * (cosmo.comoving_distance(z+Dz/2)**3-cosmo.comoving_distance(z-Dz/2)**3)
+            #Vslice = field_size / 3 * (cosmo.comoving_distance(z+Dz/2)**3-cosmo.comoving_distance(z-Dz/2)**3)
             #embed()
             #rho_MS = mol_gas_density(cat.loc[cat['issb'] == False], Vslice, params['alpha_co_ms'])
             #rho_SB = mol_gas_density(cat.loc[cat['issb'] == True],  Vslice, params['alpha_co_sb'])
