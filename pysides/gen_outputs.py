@@ -10,6 +10,13 @@ def intersect(list_a, list_b):
 
 def gen_outputs(cat, params):
 
+
+    col_in = list(cat.columns)
+
+    if('issb' in col_in):
+        print('rewrite the SB in ISSB')
+        cat['ISSB'] = cat['issb'].apply(lambda x: 1 if x != 70 else 0)
+
     if os.path.exists(params['output_path']) == False:
         print('Create '+params['output_path'])
         os.makedirs(params['output_path'])
@@ -23,8 +30,6 @@ def gen_outputs(cat, params):
         ap_table = Table.from_pandas(cat)
 
         #add units to the fields
-
-        col_in = list(cat.columns)
 
         col_unit = ['Dlum']
         for col in intersect(col_in, col_unit):
