@@ -11,7 +11,6 @@ import matplotlib
 from IPython import embed
 from progress.bar import Bar
 
-
 def mol_gas_density(cat, Vslice, alpha_co):
     nu_obs = 115.27120180 / (1+cat['redshift'])
     Lprim =  np.sum(cat['ICO10'] * (cat["Dlum"]**2) * 3.25e7 / (1+cat["redshift"])**3 / nu_obs**2)
@@ -40,7 +39,7 @@ for tile_sizeRA, tile_sizeDEC, Nsimu in params['tile_sizes']:
         cat = Table.read(params["output_path"]+f"pySIDES_from_uchuu_tile_{l}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg.fits")
         cat = cat.to_pandas()
         print('')
-        print(len(cat.loc[cat['issb'] == False]), len(cat.loc[cat['issb'] == True]))
+        print(len(cat.loc[cat['ISSB'] == 1]), len(cat.loc[cat['ISSB'] == 0]))
         print('')
         dict_tile = {}
 
