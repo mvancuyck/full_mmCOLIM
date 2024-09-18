@@ -221,7 +221,6 @@ if __name__ == "__main__":
     '''
 
     simu, cat, dirpath, fs = load_cat()
-    embed()
 
     #With SIDES Bolshoi, for rapid tests. 
     '''
