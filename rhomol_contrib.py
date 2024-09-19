@@ -79,10 +79,8 @@ if( not os.path.isfile(file1) ):
 
         dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'] = dict_fieldsize
 
-
     pickle.dump(dict, open(file, 'wb'))
 
 else: dict = pickle.load( open(file1, 'rb'))
 
 
- plt.plot(dict['9deg_x_9deg'])
