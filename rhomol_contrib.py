@@ -30,13 +30,14 @@ if( not os.path.isfile(file1) ):
 
     for tile_sizeRA, tile_sizeDEC, Nsimu in params['tile_sizes']: 
 
-        dict_fieldsize = {}
         
         # List files matching the pattern
         field_size = (tile_sizeRA * tile_sizeDEC *u.deg**2).to(u.sr)
 
         file = f"dict_dir/rhomol_alphacoMS{params['alpha_co_ms']}_alphaCOSB{params['alpha_co_sb']}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg.p"
         if( not os.path.isfile(file) ):
+
+            dict_fieldsize = {}
             
             bar = Bar(f'computing rho_mol(z) for {tile_sizeRA}x{tile_sizeDEC}deg2', max=Nsimu)  
 
@@ -79,7 +80,7 @@ if( not os.path.isfile(file1) ):
 
         dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'] = dict_fieldsize
 
-    pickle.dump(dict, open(file, 'wb'))
+    pickle.dump(dict, open(file1, 'wb'))
 
 else: dict = pickle.load( open(file1, 'rb'))
 
