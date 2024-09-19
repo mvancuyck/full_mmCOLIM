@@ -33,7 +33,7 @@ for tile_sizeRA, tile_sizeDEC, Nsimu in params['tile_sizes']:
     field_size = (tile_sizeRA * tile_sizeDEC *u.deg**2).to(u.sr)
 
     file = f"dict_dir/rhomol_alphacoMS{params['alpha_co_ms']}_alphaCOSB{params['alpha_co_sb']}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg.p"
-    if( os.path.isfile(file) ):
+    if( not os.path.isfile(file) ):
         
         bar = Bar(f'computing rho_mol(z) for {tile_sizeRA}x{tile_sizeDEC}deg2', max=Nsimu)  
 
@@ -73,7 +73,7 @@ for tile_sizeRA, tile_sizeDEC, Nsimu in params['tile_sizes']:
         pickle.dump(dict, open(file, 'wb'))
     else: 
         dict_fieldsize = pickle.load( open(file, 'rb'))
-        
+
     dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'] = dict_fieldsize
 
 file = f"dict_dir/rhomol_alphacoMS{params['alpha_co_ms']}_alphaCOSB{params['alpha_co_sb']}.p"
