@@ -67,9 +67,7 @@ if( not os.path.isfile(file1) ):
                     tab[l,iz,1] = rho_SB
                     tab[l,iz,2] = rho_SB+rho_MS
 
-            
                 dict_fieldsize[f'tile_{l}'] = dict_tile
-
                 bar.next() 
             
             dict_fieldsize['tile_0'][f'SB_mean'] = np.mean(tab[:,:,1], axis = (0))
@@ -123,3 +121,4 @@ if(True):
     plt.figure()
     plt.plot(dict['9deg_x_9deg']['redshift'], dict['9deg_x_9deg']['tile_0']['MS_mean'] / dict['1.5deg_x_1.5deg']['tile_0']['MS_mean'], 'r')
     plt.plot(dict['9deg_x_9deg']['redshift'], dict['9deg_x_9deg']['tile_0']['SB_mean'] / dict['1.5deg_x_1.5deg']['tile_0']['SB_mean'], 'k')
+    plt.show()
