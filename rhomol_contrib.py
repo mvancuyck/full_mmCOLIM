@@ -22,6 +22,7 @@ def mol_gas_density(cat, dz, field_size, alpha_co):
     rhoL = ((4*np.pi*115.27120180e9*cosmo.H(cat['redshift']))/(4e7 *cst.c*1e-3)) #Lsolar/Mpc3
     Lprim = 3.11e10/(nu_obs*(1+cat['redshift']))**3
     rhoh2 =  B*rhoL*Lprim*alpha_co
+    embed()
 
     return rhoh2       
     
