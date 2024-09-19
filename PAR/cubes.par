@@ -8,10 +8,10 @@ dz_list = (0.05,) #(0.1, 0.05, 0.05)
 #if n=0, makes a single map. if n>0, makes a cube centered on z constituted of n maps of width dz. 
 n_list = (2.0,) #(0.0, 2.0, 1.0) 
 
-alpha_co_ms = 3.6 #M⊙(K.km.s⁻¹.pc²)⁻¹
+alpha_co_ms = 4 #M⊙(K.km.s⁻¹.pc²)⁻¹
 alpha_co_sb = 0.8 #M⊙(K.km.s⁻¹.pc²)⁻¹
 
-tile_sizes = [ (1,1,0), ]# (9, 9, 12),(1.5, 1.5, 70),]
+tile_sizes = [ (9, 9, 12),(1.5, 1.5, 70), ]#(1,1,117),]
 Nmax = 100
 
 
