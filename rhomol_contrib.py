@@ -31,7 +31,6 @@ params['output_path'] = '/net/CONCERTO/home/mvancuyck/TIM_pysides_user_friendly/
 z_list = params['z_list']
 dz_list = params['dz_list']
 n_list = params['n_list']
-dz = dz_list[0]
 
 file1 = f"dict_dir/rhomol_alphacoMS{params['alpha_co_ms']}_alphaCOSB{params['alpha_co_sb']}.p"
 
@@ -67,8 +66,8 @@ if( not os.path.isfile(file1) ):
 
                     Vslice = field_size / 3 * (cosmo.comoving_distance(z+Dz/2)**3-cosmo.comoving_distance(z-Dz/2)**3)
                 
-                    rho_MS = mol_gas_density(catbin.loc[catbin['ISSB'] == 0], dz, field_size, params['alpha_co_ms'])
-                    rho_SB = mol_gas_density(catbin.loc[catbin['ISSB'] == 1], dz, field_size, params['alpha_co_sb'])
+                    rho_MS = mol_gas_density(catbin.loc[catbin['ISSB'] == 0], Dz, field_size, params['alpha_co_ms'])
+                    rho_SB = mol_gas_density(catbin.loc[catbin['ISSB'] == 1], Dz, field_size, params['alpha_co_sb'])
                     dict_tile[f'rho_mol_MS_at_z{z}'] = rho_MS
                     dict_tile[f'rho_mol_SB_at_z{z}'] = rho_SB
                     dict_tile[f'rho_mol_TOT_at_z{z}'] = rho_SB+rho_MS
