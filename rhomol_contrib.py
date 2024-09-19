@@ -11,10 +11,19 @@ import matplotlib
 from IPython import embed
 from progress.bar import Bar
 
-def mol_gas_density(cat, Vslice, alpha_co):
+def mol_gas_density(cat, dz, field_size, alpha_co):
+
     nu_obs = 115.27120180 / (1+cat['redshift'])
-    Lprim =  np.sum(cat['ICO10'] * (cat["Dlum"]**2) * 3.25e7 / (1+cat["redshift"])**3 / nu_obs**2)
-    return alpha_co * Lprim / Vslice.value       
+    dnu=dz*nu_obs/(1+z)
+    vdelt = (cst.c * 1e-3) * dnu / nu_obs #km/s
+    S = cat['ICO10'] / vdelt  #Jy
+    B = np.sum(S) / field_size
+    #-------------------------
+    rhoL = ((4*np.pi*115.27120180e9*cosmo.H(cat['redshift']))/(4e7 *cst.c*1e-3)).value #Lsolar/Mpc3
+    Lprim = 3.11e10/(nu_obs*(1+cat['redshift']))**3
+    rhoh2 =  B*rhoL*Lprim*alpha_co
+
+    return rhoh2       
     
 params = load_params('PAR/cubes.par')
 params['output_path'] = '/net/CONCERTO/home/mvancuyck/TIM_pysides_user_friendly/OUTPUT_TIM_CUBES_FROM_UCHUU/'
@@ -36,6 +45,7 @@ if( not os.path.isfile(file1) ):
 
         file = f"dict_dir/rhomol_alphacoMS{params['alpha_co_ms']}_alphaCOSB{params['alpha_co_sb']}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg.p"
         if( not os.path.isfile(file) ):
+            print('')
 
             dict_fieldsize = {}
             
@@ -57,8 +67,8 @@ if( not os.path.isfile(file1) ):
 
                     Vslice = field_size / 3 * (cosmo.comoving_distance(z+Dz/2)**3-cosmo.comoving_distance(z-Dz/2)**3)
                 
-                    rho_MS = mol_gas_density(catbin.loc[catbin['ISSB'] == 0], Vslice, params['alpha_co_ms'])
-                    rho_SB = mol_gas_density(catbin.loc[catbin['ISSB'] == 1], Vslice, params['alpha_co_sb'])
+                    rho_MS = mol_gas_density(catbin.loc[catbin['ISSB'] == 0], dz, field_size, params['alpha_co_ms'])
+                    rho_SB = mol_gas_density(catbin.loc[catbin['ISSB'] == 1], dz, field_size, params['alpha_co_sb'])
                     dict_tile[f'rho_mol_MS_at_z{z}'] = rho_MS
                     dict_tile[f'rho_mol_SB_at_z{z}'] = rho_SB
                     dict_tile[f'rho_mol_TOT_at_z{z}'] = rho_SB+rho_MS
