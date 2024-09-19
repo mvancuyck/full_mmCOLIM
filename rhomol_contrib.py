@@ -17,14 +17,11 @@ def mol_gas_density(cat, dz, field_size, alpha_co):
     dnu=dz*nu_obs/(1+z)
     vdelt = (cst.c * 1e-3) * dnu / nu_obs #km/s
     S = cat['ICO10'] / vdelt  #Jy
-    B = np.sum(S) / field_size
-    #-------------------------
     rhoL = ((4*np.pi*115.27120180e9*cosmo.H(cat['redshift']))/(4e7 *cst.c*1e-3)) #Lsolar/Mpc3
     Lprim = 3.11e10/(nu_obs*(1+cat['redshift']))**3
-    rhoh2 =  B*rhoL*Lprim*alpha_co
-    embed()
-
-    return rhoh2       
+    rhoh2 = np.sum(S*rhoL*Lprim*alpha_co) / field_size.value
+    #-------------------------
+    return rhoh2
     
 params = load_params('PAR/cubes.par')
 params['output_path'] = '/net/CONCERTO/home/mvancuyck/TIM_pysides_user_friendly/OUTPUT_TIM_CUBES_FROM_UCHUU/'
