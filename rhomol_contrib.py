@@ -61,31 +61,29 @@ if( not os.path.isfile(file1) ):
                     Dz = dz_list[0] * n_list[0]
 
                     catbin = cat.loc[ (cat['redshift']>= z-Dz/2) & (cat['redshift']<= z+Dz/2)]
-
-                    Vslice = field_size / 3 * (cosmo.comoving_distance(z+Dz/2)**3-cosmo.comoving_distance(z-Dz/2)**3)
                 
-                    rho_MS = mol_gas_density(catbin.loc[catbin['ISSB'] == 0], Dz, field_size, params['alpha_co_ms'])
-                    rho_SB = mol_gas_density(catbin.loc[catbin['ISSB'] == 1], Dz, field_size, params['alpha_co_sb'])
+                    rho_MS = mol_gas_density(catbin, Dz, field_size, params['alpha_co_ms']) #.loc[catbin['ISSB'] == 0]
+                    #rho_SB = mol_gas_density(catbin.loc[catbin['ISSB'] == 1], Dz, field_size, params['alpha_co_sb'])
                     dict_tile[f'rho_mol_MS_at_z{z}'] = rho_MS
-                    dict_tile[f'rho_mol_SB_at_z{z}'] = rho_SB
-                    dict_tile[f'rho_mol_TOT_at_z{z}'] = rho_SB+rho_MS
+                    #dict_tile[f'rho_mol_SB_at_z{z}'] = rho_SB
+                    #dict_tile[f'rho_mol_TOT_at_z{z}'] = rho_SB+rho_MS
 
                     tab[l,iz,0] = rho_MS
-                    tab[l,iz,1] = rho_SB
-                    tab[l,iz,2] = rho_SB+rho_MS
+                    #tab[l,iz,1] = rho_SB
+                    #tab[l,iz,2] = rho_SB+rho_MS
 
                 dict_fieldsize[f'tile_{l}'] = dict_tile
                 bar.next() 
             
-            dict_fieldsize['tile_0'][f'SB_mean'] = np.mean(tab[:,:,1], axis = (0))
+            #dict_fieldsize['tile_0'][f'SB_mean'] = np.mean(tab[:,:,1], axis = (0))
             dict_fieldsize['tile_0'][f'MS_mean'] = np.mean(tab[:,:,0], axis = (0))
-            dict_fieldsize['tile_0'][f'SB_median'] = np.median(tab[:,:,1], axis = (0))
+            #dict_fieldsize['tile_0'][f'SB_median'] = np.median(tab[:,:,1], axis = (0))
             dict_fieldsize['tile_0'][f'MS_median'] = np.median(tab[:,:,0], axis = (0))
-            dict_fieldsize['tile_0'][f'SB_std'] = np.std(tab[:,:,1], axis = (0))
+            #dict_fieldsize['tile_0'][f'SB_std'] = np.std(tab[:,:,1], axis = (0))
             dict_fieldsize['tile_0'][f'MS_std'] = np.std(tab[:,:,0], axis = (0))
-            dict_fieldsize['tile_0'][f'TOT_mean'] = np.mean(tab[:,:,2], axis = (0))
-            dict_fieldsize['tile_0'][f'TOT_median'] = np.median(tab[:,:,2], axis = (0))
-            dict_fieldsize['tile_0'][f'TOT_std'] = np.std(tab[:,:,2], axis = (0))
+            #dict_fieldsize['tile_0'][f'TOT_mean'] = np.mean(tab[:,:,2], axis = (0))
+            #dict_fieldsize['tile_0'][f'TOT_median'] = np.median(tab[:,:,2], axis = (0))
+            #dict_fieldsize['tile_0'][f'TOT_std'] = np.std(tab[:,:,2], axis = (0))
             dict_fieldsize['redshift'] = z_list
 
             bar.finish
@@ -112,20 +110,8 @@ if(True):
                     dict['1.5deg_x_1.5deg']['tile_0']['MS_mean'] - dict['1.5deg_x_1.5deg']['tile_0']['MS_std'], 
                     dict['1.5deg_x_1.5deg']['tile_0']['MS_mean'] + dict['1.5deg_x_1.5deg']['tile_0']['MS_std'], 
                     color='b', alpha=0.2)
-
-    plt.plot(dict['9deg_x_9deg']['redshift'],     dict['9deg_x_9deg']['tile_0']['SB_mean'], 'r')
-    plt.fill_between(dict['9deg_x_9deg']['redshift'], 
-                    dict['9deg_x_9deg']['tile_0']['SB_mean'] - dict['9deg_x_9deg']['tile_0']['SB_std'], 
-                    dict['9deg_x_9deg']['tile_0']['SB_mean'] + dict['9deg_x_9deg']['tile_0']['SB_std'], 
-                    color='r', alpha=0.2)
-    plt.plot(dict['1.5deg_x_1.5deg']['redshift'], dict['1.5deg_x_1.5deg']['tile_0']['SB_mean'], '--k')
-    plt.fill_between(dict['1.5deg_x_1.5deg']['redshift'], 
-                    dict['1.5deg_x_1.5deg']['tile_0']['SB_mean'] - dict['1.5deg_x_1.5deg']['tile_0']['SB_std'], 
-                    dict['1.5deg_x_1.5deg']['tile_0']['SB_mean'] + dict['1.5deg_x_1.5deg']['tile_0']['SB_std'], 
-                    color='k', alpha=0.2)
     plt.yscale('log')
 
     plt.figure()
     plt.plot(dict['9deg_x_9deg']['redshift'], dict['9deg_x_9deg']['tile_0']['MS_mean'] / dict['1.5deg_x_1.5deg']['tile_0']['MS_mean'], 'r')
-    plt.plot(dict['9deg_x_9deg']['redshift'], dict['9deg_x_9deg']['tile_0']['SB_mean'] / dict['1.5deg_x_1.5deg']['tile_0']['SB_mean'], 'k')
     plt.show()
