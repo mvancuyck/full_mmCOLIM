@@ -9,9 +9,10 @@ from progress.bar import Bar
 
 def mol_gas_density(cat, dz, field_size, Vslice, alpha_co):
 
-    nu_obs = 115.27120180 / (1+cat['redshift'])
-    rho_Lprim =  np.sum(cat['ICO10'] * (cat["Dlum"]**2) * 3.25e7 / (1+cat["redshift"])**3 / nu_obs**2)
-    return rho_Lprim / Vslice.value    
+    SFRD = np.sum(cat['SFR']) / Vslice.value
+    #nu_obs = 115.27120180 / (1+cat['redshift'])
+    #rho_Lprim =  np.sum(cat['ICO10'] * (cat["Dlum"]**2) * 3.25e7 / (1+cat["redshift"])**3 / nu_obs**2)
+    return SFRD #rho_Lprim / Vslice.value    
     '''
     dnu=dz*nu_obs/(1+z)
     vdelt = (cst.c * 1e-3) * dnu / nu_obs #km/s
@@ -32,6 +33,7 @@ n_list = params['n_list']
 
 file1 = f"dict_dir/rhomol_alphacoMS{params['alpha_co_ms']}_alphaCOSB{params['alpha_co_sb']}.p"
 
+'dict_dir/rhomol_alphacoMS4.0_alphaCOSB0.8.p'
 
 if( not os.path.isfile(file1) ):
     dict = {}
@@ -63,8 +65,8 @@ if( not os.path.isfile(file1) ):
                     Dz = dz_list[0] * n_list[0]
                     Vslice = field_size / 3 * (cosmo.comoving_distance(z+Dz/2)**3-cosmo.comoving_distance(z-Dz/2)**3)
                     catbin = cat.loc[ (cat['redshift']>= z-Dz/2) & (cat['redshift']<= z+Dz/2)]
-                    dict_tile[f'rho_mol_MS_at_z{z}'] = mol_gas_density(catbin, Dz, field_size, Vslice, params['alpha_co_ms']) #.loc[catbin['ISSB'] == 0]
-                    tab[l,iz,0] = dict_tile[f'rho_mol_MS_at_z{z}']
+                    dict_tile[f'sfrd_z{z}'] = mol_gas_density(catbin, Dz, field_size, Vslice, params['alpha_co_ms']) #.loc[catbin['ISSB'] == 0]
+                    tab[l,iz,0] = dict_tile[f'sfrd_z{z}']
 
                     #rho_SB = mol_gas_density(catbin.loc[catbin['ISSB'] == 1], Dz, field_size, params['alpha_co_sb'])
                     #dict_tile[f'rho_mol_SB_at_z{z}'] = rho_SB
@@ -75,9 +77,9 @@ if( not os.path.isfile(file1) ):
                 dict_fieldsize[f'tile_{l}'] = dict_tile
                 bar.next() 
             
-            dict_fieldsize['tile_0'][f'MS_mean'] = np.mean(tab[:,:,0], axis = (0))
-            dict_fieldsize['tile_0'][f'MS_median'] = np.median(tab[:,:,0], axis = (0))
-            dict_fieldsize['tile_0'][f'MS_std'] = np.std(tab[:,:,0], axis = (0))
+            dict_fieldsize['tile_0'][f'sfrd_mean'] = np.mean(tab[:,:,0], axis = (0))
+            dict_fieldsize['tile_0'][f'sfrd_median'] = np.median(tab[:,:,0], axis = (0))
+            dict_fieldsize['tile_0'][f'sfrd_std'] = np.std(tab[:,:,0], axis = (0))
             dict_fieldsize['redshift'] = z_list
             #dict_fieldsize['tile_0'][f'SB_mean'] = np.mean(tab[:,:,1], axis = (0))
             #dict_fieldsize['tile_0'][f'SB_median'] = np.median(tab[:,:,1], axis = (0))
@@ -103,7 +105,7 @@ if(True):
     for key, c  in zip(('9deg_x_9deg', '1.5deg_x_1.5deg'),('g','b')): 
         m =   dict[key]['tile_0']['MS_mean']
         std = dict[key]['tile_0']['MS_std']
-        plt.plot(z, m, 'g'); plt.fill_between(z,m-std, m+std, color='g', alpha=0.2)
+        plt.plot(z, m, c); plt.fill_between(z,m-std, m+std, color=c, alpha=0.2)
     plt.yscale('log')
 
     plt.figure()
