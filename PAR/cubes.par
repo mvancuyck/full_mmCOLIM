@@ -12,7 +12,7 @@ alpha_co_ms = 4.0 #M⊙(K.km.s⁻¹.pc²)⁻¹
 alpha_co_sb = 0.8 #M⊙(K.km.s⁻¹.pc²)⁻¹
 
 tile_sizes = [ (9, 9, 12),(1.5, 1.5, 70),]# (1,1,117),]
-Nmax = 100
+Nmax = 120
 
 
 #####Cubes making parameters#####
