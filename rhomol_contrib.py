@@ -7,17 +7,21 @@ import matplotlib
 from IPython import embed
 from progress.bar import Bar
 
-def mol_gas_density(cat, dz, field_size, alpha_co):
+def mol_gas_density(cat, dz, field_size, Vslice, alpha_co):
 
     nu_obs = 115.27120180 / (1+cat['redshift'])
+    rho_Lprim =  np.sum(cat['ICO10'] * (cat["Dlum"]**2) * 3.25e7 / (1+cat["redshift"])**3 / nu_obs**2)
+    return rho_Lprim / Vslice.value    
+    '''
     dnu=dz*nu_obs/(1+z)
     vdelt = (cst.c * 1e-3) * dnu / nu_obs #km/s
     S = cat['ICO10'] / vdelt  #Jy
     rhoL = ((4*np.pi*115.27120180e9*cosmo.H(cat['redshift']))/(4e7 *cst.c*1e-3)) #Lsolar/Mpc3
-    Lprim = 3.11e10/(nu_obs*(1+cat['redshift']))**3
-    rhoh2 = np.sum(S*rhoL*Lprim*alpha_co) / field_size.value
+    #Lprim = 3.11e10/(nu_obs*(1+cat['redshift']))**3
+    #rhoh2 = np.sum(S*rhoL*Lprim*alpha_co) / field_size.value
     #-------------------------
-    return rhoh2
+    '''
+
     
 params = load_params('PAR/cubes.par')
 params['output_path'] = '/net/CONCERTO/home/mvancuyck/TIM_pysides_user_friendly/OUTPUT_TIM_CUBES_FROM_UCHUU/'
@@ -40,6 +44,8 @@ if( not os.path.isfile(file1) ):
         if( not os.path.isfile(file) ):
             print('')
 
+            field_size = (tile_sizeRA * tile_sizeDEC *u.deg**2).to(u.sr)
+
             dict_fieldsize = {}
             
             bar = Bar(f'computing rho_mol(z) for {tile_sizeRA}x{tile_sizeDEC}deg2', max=Nsimu)  
@@ -55,9 +61,9 @@ if( not os.path.isfile(file1) ):
                 for iz, z in enumerate(z_list): 
 
                     Dz = dz_list[0] * n_list[0]
-                    Vslice = (tile_sizeRA * tile_sizeDEC *u.deg**2).to(u.sr) / 3 * (cosmo.comoving_distance(z+Dz/2)**3-cosmo.comoving_distance(z-Dz/2)**3)
+                    Vslice = field_size / 3 * (cosmo.comoving_distance(z+Dz/2)**3-cosmo.comoving_distance(z-Dz/2)**3)
                     catbin = cat.loc[ (cat['redshift']>= z-Dz/2) & (cat['redshift']<= z+Dz/2)]
-                    dict_tile[f'rho_mol_MS_at_z{z}'] = mol_gas_density(catbin, Dz, Vslice, params['alpha_co_ms']) #.loc[catbin['ISSB'] == 0]
+                    dict_tile[f'rho_mol_MS_at_z{z}'] = mol_gas_density(catbin, Dz, field_size, Vslice, params['alpha_co_ms']) #.loc[catbin['ISSB'] == 0]
                     tab[l,iz,0] = dict_tile[f'rho_mol_MS_at_z{z}']
 
                     #rho_SB = mol_gas_density(catbin.loc[catbin['ISSB'] == 1], Dz, field_size, params['alpha_co_sb'])
