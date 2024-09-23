@@ -8,18 +8,10 @@ from IPython import embed
 from progress.bar import Bar
 
 def rhoh2(cat, Vslice,dz, alpha_co):
-
     nu_obs = 115.27120180 / (1+cat['redshift'])
-    #rho_Lprim =  np.sum(cat['ICO10'] * (cat["Dlum"]**2) * 3.25e7 / (1+cat["redshift"])**3 / nu_obs**2)
-    dnu=dz*nu_obs/(1+z)
-    vdelt = (cst.c * 1e-3) * dnu / nu_obs #km/s
-    S = cat['ICO10'] / vdelt  #Jy
-    rhoL =  S * ((4*np.pi*115.27120180e9*cosmo.H(cat['redshift']))/(4e7 *cst.c*1e-3)) / Vslice.value #Lsolar/Mpc3
-    Lprim = rhoL * 3.11e10/(nu_obs*(1+cat['redshift']))**3
-    rhoh2 = Lprim * alpha_co
-    #-------------------------
-    
-    return np.sum(Lprim) 
+    rho_Lprim =  np.sum(cat['ICO10'] * (cat["Dlum"]**2) * 3.25e7 / (1+cat["redshift"])**3 / nu_obs**2) / Vslice.value
+    rhoh2 = rho_Lprim * alpha_co    
+    return rhoh2 
 
 params = load_params('PAR/cubes.par')
 
@@ -32,20 +24,26 @@ for tile_sizeRA, tile_sizeDEC, N in params['tile_sizes']:
 
     tile_size = tile_sizeRA*tile_sizeDEC
     field_size = tile_size * (np.pi/180.)**2
-    SFRD_list = np.zeros((len(zmean), N))
+    rho_list = np.zeros((len(zmean), 2, N))
 
     for l in range(N):
 
         if l >= 120: break  # Exit both loops
         #cat_subfield=cat.loc[(cat['ra']>=grid[0,idec,ira])&(cat['ra']<grid[0,idec,ira+1])&(cat['dec']>=grid[1,idec,ira])&(cat['dec']<grid[1,idec+1,ira])]
-        cat_subfield = Table.read( f'{params["output_path"]}/pySIDES_from_bolshoi_tile_{l}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg.fits' )
+        cat_subfield = Table.read( f'{params["output_path"]}/pySIDES_from_uchuu_tile_{l}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg.fits' )
         cat_subfield = cat_subfield.to_pandas()
 
         for i, (z, (left_edge, right_edge), (left_Dc, right_Dc)) in enumerate(zip(zmean, zbins, Dc_bins)):
             cat_bin = cat_subfield.loc[ (cat_subfield['redshift'] > left_edge) & (cat_subfield['redshift'] < right_edge)]
             Vslice = field_size / 3 * (right_Dc**3-left_Dc**3)
-            SFRD_list[i,l] = rhoh2(cat_bin, Vslice, dz, params['alpha_co_ms'])  #solar masses per year per Mpc cube
+            ms_cat = cat_bin.loc[cat_bin['issb']==False]
+            sb_cat = cat_bin.loc[cat_bin['issb']==True]
+            rho_list[i,0,l] = rhoh2(ms_cat, Vslice, dz, params['alpha_co_ms'])  #solar masses per year per Mpc cube
+            rho_list[i,1,l] = rhoh2(sb_cat, Vslice, dz, params['alpha_co_sb'])  #solar masses per year per Mpc cube
+            print(len(ms_cat), len(sb_cat), len(sb_cat)/len(ms_cat) )
 
-    plt.errorbar(zmean, np.mean(SFRD_list, axis=-1), yerr=np.std(SFRD_list, axis=-1))
-
+    plt.errorbar(zmean, np.mean(rho_list[:,0,:], axis=-1), yerr=np.std(rho_list[:,0,:], axis=-1), label=f'MS {tile_sizeRA}deg '+'$\\rm \\times$ '+f'{tile_sizeDEC}deg')
+    plt.errorbar(zmean, np.mean(rho_list[:,1,:], axis=-1), yerr=np.std(rho_list[:,1,:], axis=-1), label=f'SB {tile_sizeRA}deg '+'$\\rm \\times$ '+f'{tile_sizeDEC}deg')
+plt.yscale('log')
+plt.legend()
 plt.show()
