@@ -73,7 +73,7 @@ if(not os.path.isfile(dictfile)):
 
     else: dict_fields =  pickle.load( open(file, 'rb'))
 
-    dict['{tile_sizeRA}deg_x_{tile_sizeDEC}deg'] = dict_fields
+    dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'] = dict_fields
     pickle.dump(dict, open(dictfile, 'wb'))
 
 else: dict = pickle.load( open(dictfile, 'rb'))
