@@ -40,8 +40,6 @@ if(not os.path.isfile(dictfile)):
             bar = Bar(f'computing rhoH2(z) for {tile_sizeRA}deg x {tile_sizeDEC}deg', max=N)  
             for l in range(N):
 
-                if l >= 120: break  # Exit both loops
-                #cat_subfield=cat.loc[(cat['ra']>=grid[0,idec,ira])&(cat['ra']<grid[0,idec,ira+1])&(cat['dec']>=grid[1,idec,ira])&(cat['dec']<grid[1,idec+1,ira])]
                 cat_subfield = Table.read( f'{params["output_path"]}/pySIDES_from_uchuu_tile_{l}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg.fits' )
                 cat_subfield = cat_subfield.to_pandas()
                 dict_fields[f'{l}'] = {}
@@ -76,5 +74,6 @@ if(not os.path.isfile(dictfile)):
     else: dict_fields =  pickle.load( open(file, 'rb'))
 
     dict['{tile_sizeRA}deg_x_{tile_sizeDEC}deg'] = dict_fields
+    pickle.dump(dict, open(dictfile, 'wb'))
 
 else: dict = pickle.load( open(dictfile, 'rb'))
