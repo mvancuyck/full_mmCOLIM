@@ -223,7 +223,7 @@ if __name__ == "__main__":
     cat = cat.to_pandas()
     simu='pySIDES_from_bolshoi'; fs=2
     '''
-    
+    Nlist = []
     for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
 
         tile_size = tile_sizeRA*tile_sizeDEC
@@ -239,6 +239,9 @@ if __name__ == "__main__":
         # Flatten the grids and stack them into a single array
         coords = np.stack((ra_grid.flatten(), dec_grid.flatten()), axis=1)
 
+        bar = Bar(f'Generating the catalogs for {tile_sizeRA}deg x {tile_sizeDEC}deg', max=(len(coords)))  
+        Nlist.append(len(coords))
+
         for l, (ira, idec) in enumerate(coords):
 
             if l >= params['Nmax']: break  # Exit both loops
@@ -248,10 +251,10 @@ if __name__ == "__main__":
 
     dirpath = params["output_path"]
 
-    for tile_sizeRA, tile_sizeDEC, N in params['tile_sizes']: 
+    for iN, (tile_sizeRA, tile_sizeDEC, _) in enumerate(params['tile_sizes']): 
 
         tile_size = tile_sizeRA*tile_sizeDEC
-
+        N = int(Nlist[iN])
         bar = Bar(f'Generating the cubes fpr {tile_sizeRA}deg x {tile_sizeDEC}deg', max=N)  
         for l in range(N):
 
