@@ -1,7 +1,7 @@
 
 #####Output parameters########
 
-output_path = '/home/mvancuyck/here_for_sides_git/sides/PYSIDES/PYSIDES_ORIGINAL_OUTPUTS/'
+output_path = 'outputs_cubes/'
 run_name = 'pySIDES_from_original_fir_lines'
 
 gen_fits = True
