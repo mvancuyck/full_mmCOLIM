@@ -42,7 +42,6 @@ for tile_sizeRA, tile_sizeDEC, N in params['tile_sizes']:
             sb_cat = cat_bin.loc[cat_bin['ISSB']==1]
             rho_list[i,0,l] = rhoh2(ms_cat, Vslice, dz, params['alpha_co_ms'])  #solar masses per Mpc cube
             rho_list[i,1,l] = rhoh2(sb_cat, Vslice, dz, params['alpha_co_sb'])  #solar masses per Mpc cube
-            print(len(ms_cat), len(sb_cat), len(sb_cat)/len(ms_cat) )
         
         bar.next()
     bar.finish
