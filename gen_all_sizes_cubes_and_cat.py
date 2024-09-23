@@ -146,8 +146,7 @@ def gen_maps(cat, simu,
         galaxy_cube, edges = np.histogramdd(sample=(channels_gal, y, x), bins = (cube_prop_dict['z_edges'], cube_prop_dict['y_edges'], cube_prop_dict['x_edges']))
         if( galaxy_cube.sum() != len(cat_galaxies) ): print('problem B')
         save_cube(output_path, f"{params_name}", 'galaxies', 'pix', cube_prop_dict, 'pix', cat_path, dz, cube=galaxy_cube) 
-
-        
+       
     if(gen_continuum):
         lambda_list =  ( cst.c * (u.m/u.s)  / (np.asarray(freqs)*1e9 * u.Hz)  ).to(u.um)
         SED_dict = pickle.load(open('pysides/SEDfiles/SED_finegrid_dict.p', "rb"))
@@ -187,7 +186,6 @@ def gen_maps(cat, simu,
         full = cube_all_lines + continuum
         save_cube(output_path, f"{params_name}_{line}", 'full', "MJy_sr", cube_prop_dict, 'MJy per sr', cat_path, dz, cube=full)
 
-
     if(compute_properties):
 
         dict_J = compute_other_linear_model_params( f"{params_name}_" + line, f"{params_name}_" + line,
@@ -214,11 +212,12 @@ if __name__ == "__main__":
 
     #With SIDES Bolshoi, for rapid tests. 
     '''
-    dirpath="~/"
-    cat = Table.read(dirpath+'pySIDES_from_original.fits')
+    dirpath="~/pySIDES_from_original.fits"
+    cat = Table.read(dirpath)
     cat = cat.to_pandas()
     simu='pySIDES_from_bolshoi'; fs=2
     '''
+
     Nlist = []
     for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
 
@@ -244,6 +243,8 @@ if __name__ == "__main__":
             cat_subfield=cat.loc[(cat['ra']>=grid[0,idec,ira])&(cat['ra']<grid[0,idec,ira+1])&(cat['dec']>=grid[1,idec,ira])&(cat['dec']<grid[1,idec+1,ira])]
             pars['run_name'] = f'{simu}_tile_{l}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg'
             gen_outputs(cat_subfield, pars)
+            bar.next()
+        bar.finish
 
     for iN, (tile_sizeRA, tile_sizeDEC, _) in enumerate(params['tile_sizes']): 
 
@@ -259,7 +260,9 @@ if __name__ == "__main__":
             for J, rest_freq in zip(line_list, rest_freq_list):
                 make_all_cubes(cat_subfield, f"{simu}_ntile_{l}", tile_sizeRA, tile_sizeDEC, dirpath, line=J, rest_freq = rest_freq.value )
                 #gen_maps(cat_subfield, f"{simu}_ntile_{l}", 0.64, 0, 0.22, tile_size, dirpath, line=J,rest_freq = rest_freq.value)
-
+            bar.next()
+        bar.finish
+        
     for J, rest_freq in zip(line_list, rest_freq_list):
         make_all_cubes(cat, simu, np.sqrt(fs), np.sqrt(fs), dirpath, line=J,rest_freq = rest_freq.value )
 
