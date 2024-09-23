@@ -71,10 +71,10 @@ if(not os.path.isfile(dictfile)):
             #plt.legend()
             #plt.show()
 
-    else: dict_fields =  pickle.load( open(file, 'rb'))
+        else: dict_fields =  pickle.load( open(file, 'rb'))
 
-    dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'] = dict_fields
-    pickle.dump(dict, open(dictfile, 'wb'))
+        dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'] = dict_fields
+        pickle.dump(dict, open(dictfile, 'wb'))
 
 else: dict = pickle.load( open(dictfile, 'rb'))
 
