@@ -2,17 +2,16 @@
  
 dkk = 0.1
 #list of redshift center the user want a map of. 
-z_list  = (0.5, 0.8, 1.1, 1.4, 1.7, 2. , 2.3, 2.6, 2.9)
-#(0.5, 1.0, 1.5, 2.0, 2.5, 3.0)
+z_list  = (0.5, 1.0, 1.5, 2.0, 2.5, 3.0)
 #redshift bin covered by the maps
-dz_list = (0.1,) #(0.1, 0.05, 0.05)
+dz_list = (0.05,0.1, 0.05) 
 #if n=0, makes a single map. if n>0, makes a cube centered on z constituted of n maps of width dz. 
-n_list = (0.0,) #(0.0, 2.0, 1.0) 
+n_list = (2.0, 0.0, 1.0) 
 
 alpha_co_ms = 4.0 #M⊙(K.km.s⁻¹.pc²)⁻¹
 alpha_co_sb = 0.8 #M⊙(K.km.s⁻¹.pc²)⁻¹
 
-tile_sizes =  ((9,9,12),(1.5,1.5,70),(1,1,100)) #((0.447,0.447,9),(0.316,0.316,16))
+tile_sizes =  tile_sizes = [(3,3,12), (1.225,1.225,70), (1,1,0), (1.414,1.414,0)]
 
 Nmax = 120
 
