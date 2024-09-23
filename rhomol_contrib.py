@@ -58,8 +58,8 @@ if(not os.path.isfile(dictfile)):
                 bar.next()
 
             for key, ikey in zip(('MS', 'SB', 'TOT'), (0,1,2)):
-                dict_fields['0'][f'{key}_mean'] = np.mean(rho_list[:,ikey,:], axis=-1)
-                dict_fields['0'][f'{key}_std']  = np.std(rho_list[:,ikey,:], axis=-1)
+                dict_fields[f'{key}_mean'] = np.mean(rho_list[:,ikey,:], axis=-1)
+                dict_fields[f'{key}_std']  = np.std(rho_list[:,ikey,:], axis=-1)
 
             pickle.dump(dict_fields, open(file, 'wb'))
             bar.finish
@@ -77,3 +77,5 @@ if(not os.path.isfile(dictfile)):
     pickle.dump(dict, open(dictfile, 'wb'))
 
 else: dict = pickle.load( open(dictfile, 'rb'))
+
+
