@@ -26,8 +26,7 @@ for tile_sizeRA, tile_sizeDEC, N in params['tile_sizes']:
     field_size = tile_size * (np.pi/180.)**2
     rho_list = np.zeros((len(zmean), 2, N))
 
-    bar = Bar(f'computing rhoH2(z) for {tile_sizeRA}deg '+'$\\rm \\times$ '+f'{tile_sizeDEC}deg', max=N)  
-
+    bar = Bar(f'computing rhoH2(z) for {tile_sizeRA}deg x {tile_sizeDEC}deg', max=N)  
     for l in range(N):
 
         if l >= 120: break  # Exit both loops
