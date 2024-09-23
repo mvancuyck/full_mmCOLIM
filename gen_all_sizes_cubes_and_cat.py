@@ -4,6 +4,7 @@ from fcts import *
 from pysides.make_cube import *
 from pysides.load_params import *
 from pysides.gen_outputs import *
+from progress.bar import Bar
 
 
 import argparse
@@ -222,7 +223,7 @@ if __name__ == "__main__":
     cat = cat.to_pandas()
     simu='pySIDES_from_bolshoi'; fs=2
     '''
-
+    
     for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
 
         tile_size = tile_sizeRA*tile_sizeDEC
@@ -245,13 +246,22 @@ if __name__ == "__main__":
             pars['run_name'] = f'{simu}_tile_{l}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg'
             gen_outputs(cat_subfield, pars)
 
-'''
+    dirpath = params["output_path"]
+
+    for tile_sizeRA, tile_sizeDEC, N in params['tile_sizes']: 
+
+        tile_size = tile_sizeRA*tile_sizeDEC
+
+        bar = Bar(f'Generating the cubes fpr {tile_sizeRA}deg x {tile_sizeDEC}deg', max=N)  
+        for l in range(N):
+
+            cat_subfield = Table.read( f'{params["output_path"]}/pySIDES_from_uchuu_tile_{l}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg.fits' )
+            cat_subfield = cat_subfield.to_pandas()
+
             for J, rest_freq in zip(line_list, rest_freq_list):
-                print('')
-                #make_all_cubes(cat_subfield, f"{simu}_ntile_{l}", tile_size, dirpath, line=J, rest_freq = rest_freq.value )
+                make_all_cubes(cat_subfield, f"{simu}_ntile_{l}", tile_size, dirpath, line=J, rest_freq = rest_freq.value )
                 #gen_maps(cat_subfield, f"{simu}_ntile_{l}", 0.64, 0, 0.22, tile_size, dirpath, line=J,rest_freq = rest_freq.value)
 
     for J, rest_freq in zip(line_list, rest_freq_list):
-        print('')
-        #make_all_cubes(cat, simu, fs, dirpath, line=J,rest_freq = rest_freq.value )
-'''
+        make_all_cubes(cat, simu, fs, dirpath, line=J,rest_freq = rest_freq.value )
+
