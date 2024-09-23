@@ -63,11 +63,11 @@ def worker_init(*args):
 
 def worker_compute(params):
     global _args
-    cat, simu, field_size, cat_path, line, rest_freq = _args
-    for z, dz, n_avg in params: gen_maps(cat, simu, z, n_avg, dz, field_size, cat_path, line, rest_freq)
+    cat, simu, ra,dec, cat_path, line, rest_freq = _args
+    for z, dz, n_avg in params: gen_maps(cat, simu, z, n_avg, dz, ra,dec, cat_path, line, rest_freq)
     return 0
 
-def make_all_cubes(cat, simu, field_size, cat_path,line, rest_freq, ncpus=24):
+def make_all_cubes(cat, simu, ra,dec, cat_path,line, rest_freq, ncpus=24):
 
     tim_params = load_params('PAR/cubes.par')
     z_list = tim_params['z_list']
@@ -80,12 +80,12 @@ def make_all_cubes(cat, simu, field_size, cat_path,line, rest_freq, ncpus=24):
                 params_list.append( list((z,dz,n ))) 
                 
     print("start parallelization")
-    with Pool(ncpus, initializer=worker_init, initargs=list((cat, simu, field_size, cat_path,line, rest_freq ))) as p:
+    with Pool(ncpus, initializer=worker_init, initargs=list((cat, simu, ra,dec, cat_path,line, rest_freq ))) as p:
         zero = p.map(worker_compute, np.array_split(params_list, ncpus) )
     return 0   
 
 def gen_maps(cat, simu, 
-            z, n_slices, dz, field_size, cat_path, line, rest_freq, mstar_cut = 1e10, 
+            z, n_slices, dz, ra, dec, cat_path, line, rest_freq, mstar_cut = 1e10, 
             gen_continuum=False, gen_galaxies=True, gen_interlopers=True, compute_properties=True, ):
     
     '''
@@ -106,8 +106,9 @@ def gen_maps(cat, simu,
     '''
 
     #The prefix used to save the outputs maps:
-    params_name = f"{simu}_z{z}_dz{np.round(dz,3)}_{n_slices}slices_{field_size}deg2"
+    params_name = f"{simu}_z{z}_dz{np.round(dz,3)}_{n_slices}slices_{ra}deg_x_{dec}deg"
     params_cube = load_params("PAR/cubes.par")
+    output_path = params_cube['output_path']
     dkk = params_cube['dkk']
     res = params_cube['pixel_size'] * u.arcsec
     pixel_sr = (res.value * np.pi/180/3600)**2 #solid angle of the pixel in sr
@@ -249,7 +250,7 @@ if __name__ == "__main__":
             pars['run_name'] = f'{simu}_tile_{l}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg'
             gen_outputs(cat_subfield, pars)
 
-    dirpath = params["output_path"]
+    
 
     for iN, (tile_sizeRA, tile_sizeDEC, _) in enumerate(params['tile_sizes']): 
 
@@ -257,14 +258,15 @@ if __name__ == "__main__":
         N = int(Nlist[iN])
         bar = Bar(f'Generating the cubes fpr {tile_sizeRA}deg x {tile_sizeDEC}deg', max=N)  
         for l in range(N):
-
-            cat_subfield = Table.read( f'{params["output_path"]}/pySIDES_from_uchuu_tile_{l}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg.fits' )
+            file = f'{params["output_path"]}/pySIDES_from_uchuu_tile_{l}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg.fits'
+            cat_subfield = Table.read(  )
             cat_subfield = cat_subfield.to_pandas()
+            dirpath = file
 
             for J, rest_freq in zip(line_list, rest_freq_list):
-                make_all_cubes(cat_subfield, f"{simu}_ntile_{l}", tile_size, dirpath, line=J, rest_freq = rest_freq.value )
+                make_all_cubes(cat_subfield, f"{simu}_ntile_{l}", tile_sizeRA, tile_sizeDEC, dirpath, line=J, rest_freq = rest_freq.value )
                 #gen_maps(cat_subfield, f"{simu}_ntile_{l}", 0.64, 0, 0.22, tile_size, dirpath, line=J,rest_freq = rest_freq.value)
 
     for J, rest_freq in zip(line_list, rest_freq_list):
-        make_all_cubes(cat, simu, fs, dirpath, line=J,rest_freq = rest_freq.value )
+        make_all_cubes(cat, simu, np.sqrt(fs), np.sqrt(fs), dirpath, line=J,rest_freq = rest_freq.value )
 
