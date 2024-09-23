@@ -210,7 +210,7 @@ if __name__ == "__main__":
 
     pars = load_params('PAR/SIDES_from_original_with_fir_lines.par')
     params = load_params('PAR/cubes.par')
-    #simu, cat, dirpath, fs = load_cat()
+    simu, cat, dirpath, fs = load_cat()
 
     #With SIDES Bolshoi, for rapid tests. 
     '''
@@ -220,7 +220,6 @@ if __name__ == "__main__":
     simu='pySIDES_from_bolshoi'; fs=2
     '''
     Nlist = []
-    embed()
     for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
 
         tile_size = tile_sizeRA*tile_sizeDEC
