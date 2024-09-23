@@ -26,6 +26,8 @@ for tile_sizeRA, tile_sizeDEC, N in params['tile_sizes']:
     field_size = tile_size * (np.pi/180.)**2
     rho_list = np.zeros((len(zmean), 2, N))
 
+    bar = Bar(f'computing rhoH2(z) for {tile_sizeRA}deg '+'$\\rm \\times$ '+f'{tile_sizeDEC}deg', max=N)  
+
     for l in range(N):
 
         if l >= 120: break  # Exit both loops
@@ -38,12 +40,16 @@ for tile_sizeRA, tile_sizeDEC, N in params['tile_sizes']:
             Vslice = field_size / 3 * (right_Dc**3-left_Dc**3)
             ms_cat = cat_bin.loc[cat_bin['ISSB']==0]
             sb_cat = cat_bin.loc[cat_bin['ISSB']==1]
-            #rho_list[i,0,l] = rhoh2(ms_cat, Vslice, dz, params['alpha_co_ms'])  #solar masses per Mpc cube
-            #rho_list[i,1,l] = rhoh2(sb_cat, Vslice, dz, params['alpha_co_sb'])  #solar masses per Mpc cube
+            rho_list[i,0,l] = rhoh2(ms_cat, Vslice, dz, params['alpha_co_ms'])  #solar masses per Mpc cube
+            rho_list[i,1,l] = rhoh2(sb_cat, Vslice, dz, params['alpha_co_sb'])  #solar masses per Mpc cube
             print(len(ms_cat), len(sb_cat), len(sb_cat)/len(ms_cat) )
+        
+        bar.next()
+    bar.finish
+    print('')
 
-    #plt.errorbar(zmean, np.mean(rho_list[:,0,:], axis=-1), yerr=np.std(rho_list[:,0,:], axis=-1), label=f'MS {tile_sizeRA}deg '+'$\\rm \\times$ '+f'{tile_sizeDEC}deg')
-    #plt.errorbar(zmean, np.mean(rho_list[:,1,:], axis=-1), yerr=np.std(rho_list[:,1,:], axis=-1), label=f'SB {tile_sizeRA}deg '+'$\\rm \\times$ '+f'{tile_sizeDEC}deg')
-#plt.yscale('log')
-#plt.legend()
-#plt.show()
+    plt.errorbar(zmean, np.mean(rho_list[:,0,:], axis=-1), yerr=np.std(rho_list[:,0,:], axis=-1), label=f'MS {tile_sizeRA}deg '+'$\\rm \\times$ '+f'{tile_sizeDEC}deg')
+    plt.errorbar(zmean, np.mean(rho_list[:,1,:], axis=-1), yerr=np.std(rho_list[:,1,:], axis=-1), label=f'SB {tile_sizeRA}deg '+'$\\rm \\times$ '+f'{tile_sizeDEC}deg')
+plt.yscale('log')
+plt.legend()
+plt.show()
