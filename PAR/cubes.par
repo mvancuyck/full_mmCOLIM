@@ -2,22 +2,25 @@
  
 dkk = 0.1
 #list of redshift center the user want a map of. 
-z_list  = (0.5, 1.0, 1.5, 2.0, 2.5, 3.0)
+z_list  = (0.5, 0.8, 1.1, 1.4, 1.7, 2. , 2.3, 2.6, 2.9)
+#(0.5, 1.0, 1.5, 2.0, 2.5, 3.0)
 #redshift bin covered by the maps
-dz_list = (0.05,) #(0.1, 0.05, 0.05)
+dz_list = (0.1,) #(0.1, 0.05, 0.05)
 #if n=0, makes a single map. if n>0, makes a cube centered on z constituted of n maps of width dz. 
-n_list = (2.0,) #(0.0, 2.0, 1.0) 
+n_list = (0.0,) #(0.0, 2.0, 1.0) 
 
 alpha_co_ms = 4.0 #M⊙(K.km.s⁻¹.pc²)⁻¹
 alpha_co_sb = 0.8 #M⊙(K.km.s⁻¹.pc²)⁻¹
 
-tile_sizes = [ (9, 9, 12),(1.5, 1.5, 70),]# (1,1,117),]
-Nmax = 120
+tile_sizes = ((9,9,12),(1.5,1.5,70),(1,1,117))
 
+Nmax = 120
 
 #####Cubes making parameters#####
 
-sides_cat_path = "/data/SIDES/PYSIDES_UCHUU_OUTPUTS/vpeak_complete/pySIDES_from_uchuu_tile_12_2.fits"
+run_name = "pySIDES_from_uchuu"
+output_path = 'outputs_cubes/' 
+sides_cat_path = "/data/SIDES/PYSIDES_UCHUU_OUTPUTS/vpeak_complete/"
 pixel_size = 50 #arcsec
 
 #Instrument's parameters
@@ -31,8 +34,6 @@ telescop_diameter = 11.5 #m
 
 #####Cubes output parameters#####
 
-run_name = "pySIDES_from_uchuu_12_2_TIM"
-output_path = 'OUTPUT_TIM_CUBES_FROM_UCHUU'
 
 #choose the type of cube to generate (beam-smoothed or not and the unit); you can select several type of cubes at the same times!
 save_cube_nobeam_Jy_pix = False #This one is always computed as a starting point, but it does not need to be saved
