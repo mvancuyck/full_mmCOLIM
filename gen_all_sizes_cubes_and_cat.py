@@ -24,7 +24,6 @@ line_list.append('CII_de_Looze')
 #Paralelisation on 24 nodes
 #----
 
-
 def load_cat():
 
     import matplotlib
@@ -207,39 +206,32 @@ def gen_maps(cat, simu,
 
 if __name__ == "__main__":
 
+
     #parser to choose the simu and where to save the outputs 
     #e.g: python gen_cubes_TIM_cubes_117deg2_uchuu.py 'outputs_uchuu/' 'uchuu'
     #will generate the 117deg2 SIDES-Uchuu maps around z+-dz/2 and saves them in outputs_uchuu
 
-
-    '''
-    parser = argparse.ArgumentParser(description="gen cubes from Uchuu",
-                                     formatter_class = argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('output_path', help="output path of products", default = '.')
-    args = parser.parse_args()
-    output_path = args.output_path
-    '''
-
+    pars = load_params('PAR/SIDES_from_original_with_fir_lines.par')
+    params = load_params('PAR/cubes.par')
     simu, cat, dirpath, fs = load_cat()
 
     #With SIDES Bolshoi, for rapid tests. 
     '''
-    dirpath="/net/CONCERTO/home/mvancuyck/"
+    dirpath="~/"
     cat = Table.read(dirpath+'pySIDES_from_original.fits')
     cat = cat.to_pandas()
     simu='pySIDES_from_bolshoi'; fs=2
     '''
-    params = load_params('PAR/cubes.par')
-    params['output_path'] = '/net/CONCERTO/home/mvancuyck/TIM_pysides_user_friendly/OUTPUT_TIM_CUBES_FROM_UCHUU/'
-    pars = load_params('PAR/SIDES_from_original_with_fir_lines.par')
-    pars['output_path'] = params['output_path']
+
     for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
 
-        if(fs<tile_sizeRA*tile_sizeDEC): continue
+        tile_size = tile_sizeRA*tile_sizeDEC
+        field_size = tile_size * (np.pi/180.)**2
 
-        ragrid=np.arange(cat['ra'].min(),cat['ra'].max(),np.sqrt(tile_sizeRA))
-        decgrid=np.arange(cat['dec'].min(),cat['dec'].max(),np.sqrt(tile_sizeDEC))
+        ragrid=np.arange(cat['ra'].min(),cat['ra'].max(),tile_sizeRA)
+        decgrid=np.arange(cat['dec'].min(),cat['dec'].max(),tile_sizeDEC)
         grid=np.array(np.meshgrid(ragrid,decgrid))
+
         ra_index = np.arange(0,len(ragrid)-1,1)
         dec_index = np.arange(0,len(decgrid)-1,1)
         ra_grid, dec_grid = np.meshgrid(ra_index, dec_index)
@@ -247,15 +239,13 @@ if __name__ == "__main__":
         coords = np.stack((ra_grid.flatten(), dec_grid.flatten()), axis=1)
 
         for l, (ira, idec) in enumerate(coords):
-                
-            if l >= params['Nmax']: break 
 
+            if l >= params['Nmax']: break  # Exit both loops
             cat_subfield=cat.loc[(cat['ra']>=grid[0,idec,ira])&(cat['ra']<grid[0,idec,ira+1])&(cat['dec']>=grid[1,idec,ira])&(cat['dec']<grid[1,idec+1,ira])]
-            params['run_name'] = f'{simu}_tile_{l}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg'
             pars['run_name'] = f'{simu}_tile_{l}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg'
-
             gen_outputs(cat_subfield, pars)
 
+'''
             for J, rest_freq in zip(line_list, rest_freq_list):
                 print('')
                 #make_all_cubes(cat_subfield, f"{simu}_ntile_{l}", tile_size, dirpath, line=J, rest_freq = rest_freq.value )
@@ -264,3 +254,4 @@ if __name__ == "__main__":
     for J, rest_freq in zip(line_list, rest_freq_list):
         print('')
         #make_all_cubes(cat, simu, fs, dirpath, line=J,rest_freq = rest_freq.value )
+'''
