@@ -258,7 +258,7 @@ if __name__ == "__main__":
             dirpath = file
 
             for J, rest_freq in zip(line_list, rest_freq_list):
-                make_all_cubes(cat_subfield, f"{simu}_ntile_{l}", tile_sizeRA, tile_sizeDEC, dirpath, line=J, rest_freq = rest_freq.value )
+                make_all_cubes(cat_subfield, f"{simu}_nntile_{l}", tile_sizeRA, tile_sizeDEC, dirpath, line=J, rest_freq = rest_freq.value )
                 #gen_maps(cat_subfield, f"{simu}_ntile_{l}", 0.64, 0, 0.22, tile_size, dirpath, line=J,rest_freq = rest_freq.value)
             bar.next()
         bar.finish
