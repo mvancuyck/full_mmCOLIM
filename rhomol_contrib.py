@@ -20,14 +20,14 @@ dz = params['dz_list'][0]
 zbins = [(z - dz/2, z + dz/2) for z in zmean]
 Dc_bins = cosmo.comoving_distance(zbins)
 
-dictfile = f"rhoh2_alphacoMS{params['alpha_co_ms']}_alphacoSB{params['alpha_co_sb']}.p"
+dictfile = f"dict_dir/rhoh2_alphacoMS{params['alpha_co_ms']}_alphacoSB{params['alpha_co_sb']}.p"
 if(not os.path.isfile(dictfile)):
 
     dict = {}
         
     for tile_sizeRA, tile_sizeDEC, N in params['tile_sizes']: 
 
-        file = f"rhoh2_alphacoMS{params['alpha_co_ms']}_alphacoSB{params['alpha_co_sb']}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg.p"
+        file = f"dict_dir/rhoh2_alphacoMS{params['alpha_co_ms']}_alphacoSB{params['alpha_co_sb']}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg.p"
         if(not os.path.isfile(file)):
             
             dict_fields = {}
