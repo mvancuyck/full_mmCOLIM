@@ -246,10 +246,10 @@ if __name__ == "__main__":
             bar.next()
         bar.finish
 
-    for iN, (tile_sizeRA, tile_sizeDEC, _) in enumerate(params['tile_sizes']): 
+    '''
+    for iN, (tile_sizeRA, tile_sizeDEC, N) in enumerate(params['tile_sizes']): 
 
         tile_size = tile_sizeRA*tile_sizeDEC
-        N = int(Nlist[iN])
         bar = Bar(f'Generating the cubes fpr {tile_sizeRA}deg x {tile_sizeDEC}deg', max=N)  
         for l in range(N):
             file = f'{params["output_path"]}/pySIDES_from_uchuu_tile_{l}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg.fits'
@@ -266,3 +266,4 @@ if __name__ == "__main__":
     for J, rest_freq in zip(line_list, rest_freq_list):
         make_all_cubes(cat, simu, np.sqrt(fs), np.sqrt(fs), dirpath, line=J,rest_freq = rest_freq.value )
 
+    '''
