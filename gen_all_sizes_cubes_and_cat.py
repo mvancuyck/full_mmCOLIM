@@ -250,8 +250,6 @@ if __name__ == "__main__":
             pars['run_name'] = f'{simu}_tile_{l}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg'
             gen_outputs(cat_subfield, pars)
 
-    
-
     for iN, (tile_sizeRA, tile_sizeDEC, _) in enumerate(params['tile_sizes']): 
 
         tile_size = tile_sizeRA*tile_sizeDEC
@@ -259,7 +257,7 @@ if __name__ == "__main__":
         bar = Bar(f'Generating the cubes fpr {tile_sizeRA}deg x {tile_sizeDEC}deg', max=N)  
         for l in range(N):
             file = f'{params["output_path"]}/pySIDES_from_uchuu_tile_{l}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg.fits'
-            cat_subfield = Table.read(  )
+            cat_subfield = Table.read( file )
             cat_subfield = cat_subfield.to_pandas()
             dirpath = file
 
