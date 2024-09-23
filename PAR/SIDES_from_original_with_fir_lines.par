@@ -1,7 +1,7 @@
 
 #####Output parameters########
 
-output_path = 'outputs_cubes/'
+output_path = '/net/CONCERTO/home/mvancuyck/TIM_pysides_user_friendly/OUTPUT_TIM_CUBES_FROM_UCHUU/' 
 run_name = 'pySIDES_from_original_fir_lines'
 
 gen_fits = True
