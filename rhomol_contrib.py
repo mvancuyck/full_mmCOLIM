@@ -74,10 +74,6 @@ if(not os.path.isfile(dictfile)):
                     rho_list[i,1,l] = rhoh2(sb_cat, Vslice, dz, params['alpha_co_sb'])  #solar masses per Mpc cube
                     rho_list[i,2,l] = rho_list[i,1,l] + rho_list[i,0,l]
 
-                    B_list[i,0,l] = rhoh2(ms_cat, Vslice, dz, params['alpha_co_ms'])  #solar masses per Mpc cube
-                    B_list[i,1,l] = rhoh2(sb_cat, Vslice, dz, params['alpha_co_sb'])  #solar masses per Mpc cube
-                    B_list[i,2,l] = rho_list[i,1,l] + rho_list[i,0,l]
-
                     for j, (line, rest_freq) in enumerate(zip(line_list, rest_freq_list)):
 
                         B_list[i,j,1,l] = B_and_sn(sb_cat, line, rest_freq, z, dz, field_size)
