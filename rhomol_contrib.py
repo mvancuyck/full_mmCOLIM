@@ -7,6 +7,10 @@ import matplotlib
 from IPython import embed
 from progress.bar import Bar
 
+import matplotlib.lines as mlines
+import matplotlib.patches as mpatches
+import matplotlib.markers as mmarkers
+
 def rhoh2(cat, Vslice,dz, alpha_co):
     nu_obs = 115.27120180 / (1+cat['redshift'])
     rho_Lprim =  np.sum(cat['ICO10'] * (cat["Dlum"]**2) * 3.25e7 / (1+cat["redshift"])**3 / nu_obs**2) / Vslice.value
@@ -51,7 +55,7 @@ if(not os.path.isfile(dictfile)):
                     sb_cat = cat_bin.loc[cat_bin['ISSB']==1]
                     rho_list[i,0,l] = rhoh2(ms_cat, Vslice, dz, params['alpha_co_ms'])  #solar masses per Mpc cube
                     rho_list[i,1,l] = rhoh2(sb_cat, Vslice, dz, params['alpha_co_sb'])  #solar masses per Mpc cube
-                    rho_list[i,2,l] = rho_list[i,1,l] + rho_list[i,2,l]
+                    rho_list[i,2,l] = rho_list[i,1,l] + rho_list[i,0,l]
                     dict_fields[f'{l}']['MS'] = rho_list[i,0,l]
                     dict_fields[f'{l}']['SB'] = rho_list[i,1,l]
                     dict_fields[f'{l}']['TOT'] = rho_list[i,2,l]
@@ -78,4 +82,24 @@ if(not os.path.isfile(dictfile)):
 
 else: dict = pickle.load( open(dictfile, 'rb'))
 
+for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
+    for key, c, ls in zip(("MS", 'SB'), ('r','g'), ('solid', '--')):
+        
+        x = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['z']
+        y = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'{key}_mean']
+        dy = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'{key}_std']
+        if(tile_sizeRA == 3): plt.errorbar(x,y, c='k',ls=ls)
+        plt.fill_between(x,y-dy,y+dy, color=c, alpha=0.2)
 
+patchs = []
+patch = mlines.Line2D([], [], color='k', linestyle='solid',  label='$\\rm \\rho_{H2}$ MS'); patchs.append(patch)
+patch = mlines.Line2D([], [], color='k', linestyle='--',     label='$\\rm \\rho_{H2}$ SB'); patchs.append(patch)
+patch = mpatches.Patch(color='r', label='field-to-field variance for MS' ); patchs.append(patch)
+patch = mpatches.Patch(color='g', label='field-to-field variance for SB' ); patchs.append(patch)
+plt.title('$\\rm \\alpha_{CO}^{MS}=$'+f'{params["alpha_co_ms"]}, '+'$\\rm \\alpha_{CO}^{MS}=$'+f'{params["alpha_co_sb"]} '+
+          '[$\\rm M_{\\odot}.(K.km.s^{-1}.pc^2)^{-1}$]' )
+plt.yscale('log')
+plt.xlabel('redshift')
+plt.ylabel('$\\rm \\rho_{H2} [M_{\\odot}.Mpc^{-3}]$')
+plt.legend(handles = patchs)
+plt.show()
