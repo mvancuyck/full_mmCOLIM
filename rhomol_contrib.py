@@ -11,11 +11,26 @@ import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
 import matplotlib.markers as mmarkers
 
+rest_freq_list = [115.27120180  *u.GHz* J_up for J_up in range(1, 9)]
+rest_freq_list.append(freq_CI10); rest_freq_list.append(freq_CI21); 
+rest_freq_list.append(freq_CII); 
+line_list = ["CO{}{}".format(J_up, J_up - 1) for J_up in range(1, 9)]
+
 def rhoh2(cat, Vslice,dz, alpha_co):
     nu_obs = 115.27120180 / (1+cat['redshift'])
     rho_Lprim =  np.sum(cat['ICO10'] * (cat["Dlum"]**2) * 3.25e7 / (1+cat["redshift"])**3 / nu_obs**2) / Vslice.value
     rhoh2 = rho_Lprim * alpha_co    
     return rhoh2 
+
+def B_and_sn(cat, line, nu_rest, z, dz, field_size):
+    
+    nu_obs = nu_rest /(1+cat['redshift'])
+    dnu=dz*nu_obs/(1+z)
+    vdelt = (cst.c * 1e-3) * dnu / nu_obs #km/s
+    S = cat['I'+line] / vdelt  #Jy
+    B = np.sum(S) / field_size
+
+    return B 
 
 params = load_params('PAR/cubes.par')
 
@@ -40,8 +55,10 @@ if(not os.path.isfile(dictfile)):
             tile_size = tile_sizeRA*tile_sizeDEC
             field_size = tile_size * (np.pi/180.)**2
             rho_list = np.zeros((len(zmean), 3, N))
+            B_list = np.zeros((len(zmean), len(line_list), 3, N))
 
             bar = Bar(f'computing rhoH2(z) for {tile_sizeRA}deg x {tile_sizeDEC}deg', max=N)  
+
             for l in range(N):
 
                 cat_subfield = Table.read( f'{params["output_path"]}/pySIDES_from_uchuu_tile_{l}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg.fits' )
@@ -56,14 +73,37 @@ if(not os.path.isfile(dictfile)):
                     rho_list[i,0,l] = rhoh2(ms_cat, Vslice, dz, params['alpha_co_ms'])  #solar masses per Mpc cube
                     rho_list[i,1,l] = rhoh2(sb_cat, Vslice, dz, params['alpha_co_sb'])  #solar masses per Mpc cube
                     rho_list[i,2,l] = rho_list[i,1,l] + rho_list[i,0,l]
-                    dict_fields[f'{l}']['MS'] = rho_list[i,0,l]
-                    dict_fields[f'{l}']['SB'] = rho_list[i,1,l]
-                    dict_fields[f'{l}']['TOT'] = rho_list[i,2,l]
+
+                    B_list[i,0,l] = rhoh2(ms_cat, Vslice, dz, params['alpha_co_ms'])  #solar masses per Mpc cube
+                    B_list[i,1,l] = rhoh2(sb_cat, Vslice, dz, params['alpha_co_sb'])  #solar masses per Mpc cube
+                    B_list[i,2,l] = rho_list[i,1,l] + rho_list[i,0,l]
+
+                    for j, (line, rest_freq) in enumerate(zip(line_list, rest_freq_list)):
+
+                        B_list[i,j,1,l] = B_and_sn(sb_cat, line, rest_freq, z, dz, field_size)
+                        B_list[i,j,0,l] = B_and_sn(ms_cat, line, rest_freq, z, dz, field_size)
+                        B_list[i,j,2,l] = B_list[i,j,0,l] + B_list[i,j,1,l]
+
+                for j, (line, rest_freq) in enumerate(zip(line_list, rest_freq_list)):
+                    dict_fields[f'{l}'][line] = {}
+                    dict_fields[f'{l}'][line]['B_MS'] = B_list[:,j,0,l]
+                    dict_fields[f'{l}'][line]['B_SB'] = B_list[:,j,1,l]
+                    dict_fields[f'{l}'][line]['B_TOT'] = B_list[:,j,2,l]
+                dict_fields[f'{l}']['MS'] = rho_list[:,0,l]
+                dict_fields[f'{l}']['SB'] = rho_list[:,1,l]
+                dict_fields[f'{l}']['TOT'] = rho_list[:,2,l]
+
                 bar.next()
 
             for key, ikey in zip(('MS', 'SB', 'TOT'), (0,1,2)):
+
                 dict_fields[f'{key}_mean'] = np.mean(rho_list[:,ikey,:], axis=-1)
                 dict_fields[f'{key}_std']  = np.std(rho_list[:,ikey,:], axis=-1)
+
+                for j, (line, rest_freq) in enumerate(zip(line_list, rest_freq_list)):
+
+                    dict_fields[f'{l}'][line]['B_{key}_median'] = np.mean(B_list[:,j,ikey,:], axis=-1)
+                    dict_fields[f'{l}'][line]['B_{key}_std'] = np.mean(B_list[:,j,ikey,:], axis=-1)
 
             pickle.dump(dict_fields, open(file, 'wb'))
             bar.finish
