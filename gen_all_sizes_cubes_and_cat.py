@@ -220,7 +220,6 @@ if __name__ == "__main__":
 
     Nlist = []
     for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
-        if(tile_sizeRA !=3.0): continue
 
         tile_size = tile_sizeRA*tile_sizeDEC
         field_size = tile_size * (np.pi/180.)**2
