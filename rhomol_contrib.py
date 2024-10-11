@@ -17,15 +17,17 @@ rest_freq_list.append(freq_CII);
 line_list = ["CO{}{}".format(J_up, J_up - 1) for J_up in range(1, 9)]
 
 def rhoh2(cat, Vslice,dz, alpha_co):
+
     nu_obs = 115.27120180 / (1+cat['redshift'])
     rho_Lprim =  np.sum(cat['ICO10'] * (cat["Dlum"]**2) * 3.25e7 / (1+cat["redshift"])**3 / nu_obs**2) / Vslice.value
     rhoh2 = rho_Lprim * alpha_co    
+
     return rhoh2 
 
 def B_and_sn(cat, line, nu_rest, z, dz, field_size):
     
     nu_obs = nu_rest /(1+cat['redshift'])
-    dnu=dz*nu_obs/(1+z)
+    dnu    = dz*nu_obs/(1+z)
     vdelt = (cst.c * 1e-3) * dnu / nu_obs #km/s
     S = cat['I'+line] / vdelt  #Jy
     B = np.sum(S) / field_size
@@ -40,7 +42,8 @@ zbins = [(z - dz/2, z + dz/2) for z in zmean]
 Dc_bins = cosmo.comoving_distance(zbins)
 
 dictfile = f"dict_dir/rhoh2_alphacoMS{params['alpha_co_ms']}_alphacoSB{params['alpha_co_sb']}.p"
-if(not os.path.isfile(dictfile)):
+
+if(not os.path.isfile(dictfile) ):
 
     dict = {}
         
@@ -61,7 +64,7 @@ if(not os.path.isfile(dictfile)):
 
             for l in range(N):
 
-                cat_subfield = Table.read( f'{params["output_path"]}/pySIDES_from_uchuu_tile_{l}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg.fits' )
+                cat_subfield = Table.read( f'{params["sides_cat_path"]}/pySIDES_from_uchuu_tile_{l}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg.fits' )
                 cat_subfield = cat_subfield.to_pandas()
                 dict_fields[f'{l}'] = {}
 
@@ -81,10 +84,12 @@ if(not os.path.isfile(dictfile)):
                         B_list[i,j,2,l] = B_list[i,j,0,l] + B_list[i,j,1,l]
 
                 for j, (line, rest_freq) in enumerate(zip(line_list, rest_freq_list)):
+
                     dict_fields[f'{l}'][line] = {}
                     dict_fields[f'{l}'][line]['B_MS'] = B_list[:,j,0,l]
                     dict_fields[f'{l}'][line]['B_SB'] = B_list[:,j,1,l]
                     dict_fields[f'{l}'][line]['B_TOT'] = B_list[:,j,2,l]
+
                 dict_fields[f'{l}']['MS'] = rho_list[:,0,l]
                 dict_fields[f'{l}']['SB'] = rho_list[:,1,l]
                 dict_fields[f'{l}']['TOT'] = rho_list[:,2,l]
@@ -98,18 +103,12 @@ if(not os.path.isfile(dictfile)):
 
                 for j, (line, rest_freq) in enumerate(zip(line_list, rest_freq_list)):
 
-                    dict_fields[f'{l}'][line]['B_{key}_median'] = np.mean(B_list[:,j,ikey,:], axis=-1)
-                    dict_fields[f'{l}'][line]['B_{key}_std'] = np.mean(B_list[:,j,ikey,:], axis=-1)
+                    dict_fields[f'{l}'][line]['B_{key}_mean'] = np.mean(B_list[:,j,ikey,:], axis=-1)
+                    dict_fields[f'{l}'][line]['B_{key}_std'] = np.std(B_list[:,j,ikey,:], axis=-1)
 
             pickle.dump(dict_fields, open(file, 'wb'))
             bar.finish
             print('')
-
-            #plt.errorbar(zmean, np.mean(rho_list[:,0,:], axis=-1), yerr=np.std(rho_list[:,0,:], axis=-1), label=f'MS {tile_sizeRA}deg '+'$\\rm \\times$ '+f'{tile_sizeDEC}deg')
-            #plt.errorbar(zmean, np.mean(rho_list[:,1,:], axis=-1), yerr=np.std(rho_list[:,1,:], axis=-1), label=f'SB {tile_sizeRA}deg '+'$\\rm \\times$ '+f'{tile_sizeDEC}deg')
-            #plt.yscale('log')
-            #plt.legend()
-            #plt.show()
 
         else: dict_fields =  pickle.load( open(file, 'rb'))
 
@@ -118,6 +117,7 @@ if(not os.path.isfile(dictfile)):
 
 else: dict = pickle.load( open(dictfile, 'rb'))
 
+'''
 for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
     for key, c, ls in zip(("MS", 'SB'), ('r','g'), ('solid', '--')):
         
@@ -139,3 +139,4 @@ plt.xlabel('redshift')
 plt.ylabel('$\\rm \\rho_{H2} [M_{\\odot}.Mpc^{-3}]$')
 plt.legend(handles = patchs)
 plt.show()
+'''
