@@ -103,8 +103,8 @@ if(not os.path.isfile(dictfile) ):
 
                 for j, (line, rest_freq) in enumerate(zip(line_list, rest_freq_list)):
 
-                    dict_fields[f'{l}'][line]['B_{key}_mean'] = np.mean(B_list[:,j,ikey,:], axis=-1)
-                    dict_fields[f'{l}'][line]['B_{key}_std'] = np.std(B_list[:,j,ikey,:], axis=-1)
+                    dict_fields[f'B_{key}_{line}_mean'] = np.mean(B_list[:,j,ikey,:], axis=-1)
+                    dict_fields[f'B_{key}_{line}_std'] = np.std(B_list[:,j,ikey,:], axis=-1)
 
             pickle.dump(dict_fields, open(file, 'wb'))
             bar.finish
@@ -119,13 +119,16 @@ else: dict = pickle.load( open(dictfile, 'rb'))
 
 # --- SLED --- 
 
+
 for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
     for key, c, ls in zip(("MS", 'SB'), ('r','g'), ('solid', '--')):
         for j, (line, rest_freq) in enumerate(zip(line_list, rest_freq_list)):
 
-            y = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'{key}_mean']
-            dy = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'{key}_std']
-            x = np.ones(len(y)) (j+1)
+            #dict_fields[f'{l}'][line]['B_{key}_mean'] = np.mean(B_list[:,j,ikey,:], axis=-1)
+            #dict_fields[f'{l}'][line]['B_{key}_std'] = np.std(B_list[:,j,ikey,:], axis=-1)
+            x = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['z']
+            y = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][line][f'B_{key}_mean']
+            dy = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][line][f'B_{key}_std']
             if(tile_sizeRA == 3): plt.errorbar(x,y, c='k',ls=ls)
             plt.fill_between(x,y-dy,y+dy, color=c, alpha=0.2)
 
@@ -140,7 +143,6 @@ plt.yscale('log')
 plt.xlabel('redshift')
 plt.ylabel('B$\\rm \\nu$ [Jy/sr]')
 plt.legend(handles = patchs)
-plt.show()
 
 
 
@@ -148,8 +150,8 @@ for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']:
     for key, c, ls in zip(("MS", 'SB'), ('r','g'), ('solid', '--')):
         
         x = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['z']
-        y = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][:][f'B_{key}_mean']
-        dy = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][:][f'{key}_std']
+        y = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'{key}_mean']
+        dy = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'{key}_std']
         if(tile_sizeRA == 3): plt.errorbar(x,y, c='k',ls=ls)
         plt.fill_between(x,y-dy,y+dy, color=c, alpha=0.2)
 
@@ -163,5 +165,5 @@ plt.title('$\\rm \\alpha_{CO}^{MS}=$'+f'{params["alpha_co_ms"]}, '+'$\\rm \\alph
 plt.yscale('log')
 plt.xlabel('redshift')
 plt.ylabel('$\\rm \\rho_{H2} [M_{\\odot}.Mpc^{-3}]$')
-plt.legend(handles = patchs)
+plt.legend(handles = patchs, )
 plt.show()
