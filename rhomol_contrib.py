@@ -117,7 +117,7 @@ if(not os.path.isfile(dictfile) ):
 
 else: dict = pickle.load( open(dictfile, 'rb'))
 
-'''
+
 for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
     for key, c, ls in zip(("MS", 'SB'), ('r','g'), ('solid', '--')):
         
@@ -132,11 +132,10 @@ patch = mlines.Line2D([], [], color='k', linestyle='solid',  label='$\\rm \\rho_
 patch = mlines.Line2D([], [], color='k', linestyle='--',     label='$\\rm \\rho_{H2}$ SB'); patchs.append(patch)
 patch = mpatches.Patch(color='r', label='field-to-field variance for MS' ); patchs.append(patch)
 patch = mpatches.Patch(color='g', label='field-to-field variance for SB' ); patchs.append(patch)
-plt.title('$\\rm \\alpha_{CO}^{MS}=$'+f'{params["alpha_co_ms"]}, '+'$\\rm \\alpha_{CO}^{MS}=$'+f'{params["alpha_co_sb"]} '+
+plt.title('$\\rm \\alpha_{CO}^{MS}=$'+f'{params["alpha_co_ms"]}, '+'$\\rm \\alpha_{CO}^{SB}=$'+f'{params["alpha_co_sb"]} '+
           '[$\\rm M_{\\odot}.(K.km.s^{-1}.pc^2)^{-1}$]' )
 plt.yscale('log')
 plt.xlabel('redshift')
 plt.ylabel('$\\rm \\rho_{H2} [M_{\\odot}.Mpc^{-3}]$')
 plt.legend(handles = patchs)
 plt.show()
-'''
