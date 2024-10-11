@@ -64,7 +64,7 @@ if(not os.path.isfile(dictfile) ):
 
             for l in range(N):
 
-                cat_subfield = Table.read( f'{params["sides_cat_path"]}/pySIDES_from_uchuu_tile_{l}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg.fits' )
+                cat_subfield = Table.read( f'{params["output_path"]}/pySIDES_from_uchuu_tile_{l}_{tile_sizeRA}deg_x_{tile_sizeDEC}deg.fits' )
                 cat_subfield = cat_subfield.to_pandas()
                 dict_fields[f'{l}'] = {}
 
