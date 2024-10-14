@@ -142,12 +142,12 @@ if(not os.path.isfile(dictfile) ):
                     dict_fields[f'B_{key}_{line}_mean'] = np.mean(B_list[:,j,ikey,:], axis=-1)
                     dict_fields[f'B_{key}_{line}_std'] = np.std(B_list[:,j,ikey,:], axis=-1)
                 
-                    dict_fields[f'B_{key}_{line}/B_CO32_mean'] = np.mean(Bratio_list_ttt[:,j,ikey,l], axis=-1)
-                    dict_fields[f'B_{key}_{line}/B_CO32_std'] = np.mean(Bratio_list_ttt[:,j,ikey,l], axis=-1)
+                    dict_fields[f'B_{key}_{line}/B_CO32_mean'] = np.mean(Bratio_list_ttt[:,j,ikey,:], axis=-1)
+                    dict_fields[f'B_{key}_{line}/B_CO32_std'] = np.mean(Bratio_list_ttt[:,j,ikey,:], axis=-1)
 
                     if(j!= 0): 
-                        dict_fields[f'B_{key}_{line}/B_CO10_mean'] = np.mean(Bratio_list[:,j,ikey,l], axis=-1)
-                        dict_fields[f'B_{key}_{line}/B_CO10_std'] = np.mean(Bratio_list[:,j,ikey,l], axis=-1)
+                        dict_fields[f'B_{key}_{line}/B_CO10_mean'] = np.mean(Bratio_list[:,j,ikey,:], axis=-1)
+                        dict_fields[f'B_{key}_{line}/B_CO10_std'] = np.mean(Bratio_list[:,j,ikey,:], axis=-1)
 
             pickle.dump(dict_fields, open(file, 'wb'))
             bar.finish
@@ -188,6 +188,15 @@ if(True):
             dy =100* dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'ratio_B_SB_{line}_TOT_std']
             if(tile_sizeRA == 3): axr.errorbar(x,y, c='k',ls=ls)
             axr.fill_between(x,y-dy,y+dy, color=colors_co[j], alpha=0.2)
+
+        
+        for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
+            x = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['z']
+            if(j >0):
+                y = 100*dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_SB_{line}/B_CO10_mean']
+                dy =100* dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_SB_{line}/B_CO10_std']
+                if(tile_sizeRA == 3): axr.errorbar(x,y, c='k',ls=ls)
+                axrr.fill_between(x,y-dy,y+dy, color='g', alpha=0.2)
 
         patchs = []
         patch = mlines.Line2D([], [], color='k', linestyle='solid',  label='B$\\rm \\nu$ MS'); patchs.append(patch)
