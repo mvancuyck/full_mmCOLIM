@@ -86,9 +86,9 @@ if(not os.path.isfile(dictfile) ):
 
                         if(j!= 0 ): 
 
-                            Bratio_list[i,j,0,l] = B_list[i,j,0,l] / B_list[i,0,0,l]
-                            Bratio_list[i,j,1,l] = B_list[i,j,1,l] / B_list[i,0,0,l]
-                            Bratio_list[i,j,2,l] = B_list[i,j,2,l] / B_list[i,0,0,l]
+                            Bratio_list[i,j,0,l] = B_list[i,j,0,l] / B_list[i,0,2,l]
+                            Bratio_list[i,j,1,l] = B_list[i,j,1,l] / B_list[i,0,2,l]
+                            Bratio_list[i,j,2,l] = B_list[i,j,2,l] / B_list[i,0,2,l]
 
                 for j, (line, rest_freq) in enumerate(zip(line_list, rest_freq_list)):
 
@@ -156,8 +156,8 @@ if(True):
 
 
         BS = 7; plt.rc('font', size=BS); plt.rc('axes', titlesize=BS); plt.rc('axes', labelsize=BS)
-        fig, (ax, axr) = plt.subplots(2, 1, sharex=True, sharey = 'row', 
-                                        gridspec_kw={'height_ratios': [2,1]}, 
+        fig, (ax, axr, axrr) = plt.subplots(3, 1, sharex=True, sharey = 'row', 
+                                        gridspec_kw={'height_ratios': [2,1,1]}, 
                                         figsize=(5,4.5), dpi = 200)
     
         for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
@@ -179,9 +179,10 @@ if(True):
         patch = mlines.Line2D([], [], color='k', linestyle='solid',  label='B$\\rm \\nu$ MS'); patchs.append(patch)
         patch = mlines.Line2D([], [], color='k', linestyle='--',     label='B$\\rm \\nu$ [Jy/sr] SB'); patchs.append(patch)
         ax.set_yscale('log')
-        axr.set_xlabel('redshift')
+        axrr.set_xlabel('redshift')
         ax.set_ylabel('B$\\rm \\nu$ [Jy/sr]'+f' of {line}')
         axr.set_ylabel('$\\rm B^{SB}_{\\nu} / B^{MS+SB}_{\\nu}$ [%] ')
+        axrr.set_ylabel('$\\rm B^{SB}_{\\nu} / B^{CO10,SB+MS}_{\\nu}$')
         ax.legend(handles = patchs, frameon=False)
         fig.tight_layout(); fig.subplots_adjust(hspace=.0)
         plt.savefig(f'{line}_SB_and_MS_Bnu.png')
