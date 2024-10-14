@@ -60,6 +60,7 @@ if(not os.path.isfile(dictfile) ):
             rho_list = np.zeros((len(zmean), 3, N))
             B_list = np.zeros((len(zmean), len(line_list), 3, N))
             Bratio_list = np.zeros((len(zmean), len(line_list), 3, N))
+            Bratio_list_ttt = np.zeros((len(zmean), len(line_list), 3, N))
 
             bar = Bar(f'computing rhoH2(z) for {tile_sizeRA}deg x {tile_sizeDEC}deg', max=N)  
 
@@ -84,11 +85,17 @@ if(not os.path.isfile(dictfile) ):
                         B_list[i,j,0,l] = B_and_sn(ms_cat, line, rest_freq, z, dz, field_size)
                         B_list[i,j,2,l] = B_list[i,j,0,l] + B_list[i,j,1,l]
 
+                    for j, (line, rest_freq) in enumerate(zip(line_list, rest_freq_list)):
+
                         if(j!= 0 ): 
 
                             Bratio_list[i,j,0,l] = B_list[i,j,0,l] / B_list[i,0,2,l]
                             Bratio_list[i,j,1,l] = B_list[i,j,1,l] / B_list[i,0,2,l]
                             Bratio_list[i,j,2,l] = B_list[i,j,2,l] / B_list[i,0,2,l]
+
+                        Bratio_list_ttt[i,j,0,l] = B_list[i,j,0,l] / B_list[i,2,2,l]
+                        Bratio_list_ttt[i,j,1,l] = B_list[i,j,1,l] / B_list[i,2,2,l]
+                        Bratio_list_ttt[i,j,2,l] = B_list[i,j,2,l] / B_list[i,2,2,l]
 
                 for j, (line, rest_freq) in enumerate(zip(line_list, rest_freq_list)):
 
@@ -96,6 +103,12 @@ if(not os.path.isfile(dictfile) ):
                     dict_fields[f'{l}'][line]['B_MS'] = B_list[:,j,0,l]
                     dict_fields[f'{l}'][line]['B_SB'] = B_list[:,j,1,l]
                     dict_fields[f'{l}'][line]['B_TOT'] = B_list[:,j,2,l]
+
+                for j, (line, rest_freq) in enumerate(zip(line_list, rest_freq_list)):
+
+                    dict_fields[f'{l}'][line]['B_MS/B_CO32'] = Bratio_list_ttt[:,j,0,l]
+                    dict_fields[f'{l}'][line]['B_SB/B_CO32'] = Bratio_list_ttt[:,j,1,l]
+                    dict_fields[f'{l}'][line]['B_TOT/B_CO32'] = Bratio_list_ttt[:,j,2,l]
 
                     if(j!= 0 ): 
 
@@ -129,11 +142,13 @@ if(not os.path.isfile(dictfile) ):
                     dict_fields[f'B_{key}_{line}_mean'] = np.mean(B_list[:,j,ikey,:], axis=-1)
                     dict_fields[f'B_{key}_{line}_std'] = np.std(B_list[:,j,ikey,:], axis=-1)
                 
-                    if(j!= 0 ): 
+                    dict_fields[f'{l}']['B_{key}/B_CO32_mean'] = np.mean(Bratio_list_ttt[:,j,ikey,l], axis=-1)
+                    dict_fields[f'{l}']['B_{key}/B_CO32_std'] = np.mean(Bratio_list_ttt[:,j,ikey,l], axis=-1)
+
+                    if(j!= 0): 
 
                         dict_fields[f'{l}']['B_{key}/B_CO10_mean'] = np.mean(Bratio_list[:,j,ikey,l], axis=-1)
                         dict_fields[f'{l}']['B_{key}/B_CO10_std'] = np.mean(Bratio_list[:,j,ikey,l], axis=-1)
-
 
             pickle.dump(dict_fields, open(file, 'wb'))
             bar.finish
