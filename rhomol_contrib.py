@@ -142,13 +142,12 @@ if(not os.path.isfile(dictfile) ):
                     dict_fields[f'B_{key}_{line}_mean'] = np.mean(B_list[:,j,ikey,:], axis=-1)
                     dict_fields[f'B_{key}_{line}_std'] = np.std(B_list[:,j,ikey,:], axis=-1)
                 
-                    dict_fields[f'{l}']['B_{key}/B_CO32_mean'] = np.mean(Bratio_list_ttt[:,j,ikey,l], axis=-1)
-                    dict_fields[f'{l}']['B_{key}/B_CO32_std'] = np.mean(Bratio_list_ttt[:,j,ikey,l], axis=-1)
+                    dict_fields[f'B_{key}_{line}/B_CO32_mean'] = np.mean(Bratio_list_ttt[:,j,ikey,l], axis=-1)
+                    dict_fields[f'B_{key}_{line}/B_CO32_std'] = np.mean(Bratio_list_ttt[:,j,ikey,l], axis=-1)
 
                     if(j!= 0): 
-
-                        dict_fields[f'{l}']['B_{key}/B_CO10_mean'] = np.mean(Bratio_list[:,j,ikey,l], axis=-1)
-                        dict_fields[f'{l}']['B_{key}/B_CO10_std'] = np.mean(Bratio_list[:,j,ikey,l], axis=-1)
+                        dict_fields[f'B_{key}_{line}/B_CO10_mean'] = np.mean(Bratio_list[:,j,ikey,l], axis=-1)
+                        dict_fields[f'B_{key}_{line}/B_CO10_std'] = np.mean(Bratio_list[:,j,ikey,l], axis=-1)
 
             pickle.dump(dict_fields, open(file, 'wb'))
             bar.finish
