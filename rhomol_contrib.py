@@ -98,10 +98,20 @@ if(not os.path.isfile(dictfile) ):
 
             for key, ikey in zip(('MS', 'SB', 'TOT'), (0,1,2)):
 
+                if(key is not 'TOT'):
+
+                    dict_fields[f'ratio_rho_{key}_TOT_mean'] = np.mean(rho_list[:,ikey,:]/rho_list[:,2,:], axis=-1)
+                    dict_fields[f'ratio_rho_{key}_TOT_std']  = np.std(rho_list[:,ikey,:]/rho_list[:,2,:], axis=-1)
+
                 dict_fields[f'{key}_mean'] = np.mean(rho_list[:,ikey,:], axis=-1)
                 dict_fields[f'{key}_std']  = np.std(rho_list[:,ikey,:], axis=-1)
 
                 for j, (line, rest_freq) in enumerate(zip(line_list, rest_freq_list)):
+
+                    if(key is not 'TOT'):
+
+                        dict_fields[f'ratio_B_{key}_{line}_TOT_mean'] = np.mean(B_list[:,j,ikey,:]/B_list[:,j,2,:], axis=-1)
+                        dict_fields[f'ratio_B_{key}_{line}_TOT_std']  = np.std(B_list[:,j,ikey,:]/B_list[:,j,2,:], axis=-1)
 
                     dict_fields[f'B_{key}_{line}_mean'] = np.mean(B_list[:,j,ikey,:], axis=-1)
                     dict_fields[f'B_{key}_{line}_std'] = np.std(B_list[:,j,ikey,:], axis=-1)
@@ -119,51 +129,78 @@ else: dict = pickle.load( open(dictfile, 'rb'))
 
 # --- SLED --- 
 
+colors_co = ('orange', 'r', 'b', 'cyan', 'g', 'purple', 'magenta', 'grey',)
+
+if(False): 
+        
+    for j, (line, rest_freq) in enumerate(zip(line_list, rest_freq_list)):
+        plt.figure()
+
+        for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
+            for key, c, ls in zip(("MS", 'SB'), ('r','g'), ('solid', '--')):
+                x = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['z']
+                y = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_{key}_{line}_mean']
+                dy = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_{key}_{line}_std']
+                if(tile_sizeRA == 3): plt.errorbar(x,y, c='k',ls=ls)
+                plt.fill_between(x,y-dy,y+dy, color=colors_co[j], alpha=0.2)
+
+        patchs = []
+        patch = mlines.Line2D([], [], color='k', linestyle='solid',  label='B$\\rm \\nu$ MS'); patchs.append(patch)
+        patch = mlines.Line2D([], [], color='k', linestyle='--',     label='B$\\rm \\nu$ [Jy/sr] SB'); patchs.append(patch)
+        plt.title('$\\rm \\alpha_{CO}^{MS}=$'+f'{params["alpha_co_ms"]}, '+'$\\rm \\alpha_{CO}^{SB}=$'+f'{params["alpha_co_sb"]} '+
+                '[$\\rm M_{\\odot}.(K.km.s^{-1}.pc^2)^{-1}$]' )
+        plt.yscale('log')
+        plt.xlabel('redshift')
+        plt.ylabel('B$\\rm \\nu$ [Jy/sr]'+f' of {line}')
+        plt.legend(handles = patchs)
+        plt.savefig(f'{line}_SB_and_MS_Bnu.png')
+    plt.close()
+
+
+plt.figure()
+for j, (line, rest_freq) in enumerate(zip(line_list, rest_freq_list)):
+    for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
+        x = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['z']
+        y = 100*dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_SB_{line}_mean'] / dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_TOT_{line}_mean']
+        #dy = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_{key}_{line}_std']
+        if(tile_sizeRA == 3): plt.errorbar(x,y, c=colors_co[j],ls='solid')
+        #plt.fill_between(x,y-dy,y+dy, color=colors_co[j], alpha=0.2)
 
 for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
-    for key, c, ls in zip(("MS", 'SB'), ('r','g'), ('solid', '--')):
-        for j, (line, rest_freq) in enumerate(zip(line_list, rest_freq_list)):
+    x = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['z']
+    y = 100*dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'SB_mean'] / dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'TOT_mean']
+    if(tile_sizeRA == 3): plt.errorbar(x,y, c='k',ls='solid')
 
-            #dict_fields[f'{l}'][line]['B_{key}_mean'] = np.mean(B_list[:,j,ikey,:], axis=-1)
-            #dict_fields[f'{l}'][line]['B_{key}_std'] = np.std(B_list[:,j,ikey,:], axis=-1)
+plt.ylim(5e-1, 7e1)
+plt.title('$\\rm \\alpha_{CO}^{MS}=$'+f'{params["alpha_co_ms"]}, '+'$\\rm \\alpha_{CO}^{SB}=$'+f'{params["alpha_co_sb"]} '+
+        '[$\\rm M_{\\odot}.(K.km.s^{-1}.pc^2)^{-1}$]' )
+plt.yscale('log')
+plt.xlabel('redshift')
+plt.ylabel('100*($\\rm B^{SB}_{\\nu} / B^{TOT}_{\\nu}$)')
+plt.savefig(f'SB_MS_contrib_to_Bnu.png')
+plt.show()
+#Rho plot
+
+if(False):
+    plt.figure()
+    for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
+        for key, c, ls in zip(("MS", 'SB'), ('r','g'), ('solid', '--')):
+            
             x = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['z']
-            y = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][line][f'B_{key}_mean']
-            dy = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][line][f'B_{key}_std']
+            y = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'{key}_mean']
+            dy = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'{key}_std']
             if(tile_sizeRA == 3): plt.errorbar(x,y, c='k',ls=ls)
             plt.fill_between(x,y-dy,y+dy, color=c, alpha=0.2)
 
-patchs = []
-patch = mlines.Line2D([], [], color='k', linestyle='solid',  label='B$\\rm \\nu$ MS'); patchs.append(patch)
-patch = mlines.Line2D([], [], color='k', linestyle='--',     label='B$\\rm \\nu$ [Jy/sr] SB'); patchs.append(patch)
-patch = mpatches.Patch(color='r', label='field-to-field variance for MS' ); patchs.append(patch)
-patch = mpatches.Patch(color='g', label='field-to-field variance for SB' ); patchs.append(patch)
-plt.title('$\\rm \\alpha_{CO}^{MS}=$'+f'{params["alpha_co_ms"]}, '+'$\\rm \\alpha_{CO}^{SB}=$'+f'{params["alpha_co_sb"]} '+
-          '[$\\rm M_{\\odot}.(K.km.s^{-1}.pc^2)^{-1}$]' )
-plt.yscale('log')
-plt.xlabel('redshift')
-plt.ylabel('B$\\rm \\nu$ [Jy/sr]')
-plt.legend(handles = patchs)
-
-
-
-for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
-    for key, c, ls in zip(("MS", 'SB'), ('r','g'), ('solid', '--')):
-        
-        x = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['z']
-        y = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'{key}_mean']
-        dy = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'{key}_std']
-        if(tile_sizeRA == 3): plt.errorbar(x,y, c='k',ls=ls)
-        plt.fill_between(x,y-dy,y+dy, color=c, alpha=0.2)
-
-patchs = []
-patch = mlines.Line2D([], [], color='k', linestyle='solid',  label='$\\rm \\rho_{H2}$ MS'); patchs.append(patch)
-patch = mlines.Line2D([], [], color='k', linestyle='--',     label='$\\rm \\rho_{H2}$ SB'); patchs.append(patch)
-patch = mpatches.Patch(color='r', label='field-to-field variance for MS' ); patchs.append(patch)
-patch = mpatches.Patch(color='g', label='field-to-field variance for SB' ); patchs.append(patch)
-plt.title('$\\rm \\alpha_{CO}^{MS}=$'+f'{params["alpha_co_ms"]}, '+'$\\rm \\alpha_{CO}^{SB}=$'+f'{params["alpha_co_sb"]} '+
-          '[$\\rm M_{\\odot}.(K.km.s^{-1}.pc^2)^{-1}$]' )
-plt.yscale('log')
-plt.xlabel('redshift')
-plt.ylabel('$\\rm \\rho_{H2} [M_{\\odot}.Mpc^{-3}]$')
-plt.legend(handles = patchs, )
-plt.show()
+    patchs = []
+    patch = mlines.Line2D([], [], color='k', linestyle='solid',  label='$\\rm \\rho_{H2}$ MS'); patchs.append(patch)
+    patch = mlines.Line2D([], [], color='k', linestyle='--',     label='$\\rm \\rho_{H2}$ SB'); patchs.append(patch)
+    patch = mpatches.Patch(color='r', label='field-to-field variance for MS' ); patchs.append(patch)
+    patch = mpatches.Patch(color='g', label='field-to-field variance for SB' ); patchs.append(patch)
+    plt.title('$\\rm \\alpha_{CO}^{MS}=$'+f'{params["alpha_co_ms"]}, '+'$\\rm \\alpha_{CO}^{SB}=$'+f'{params["alpha_co_sb"]} '+
+            '[$\\rm M_{\\odot}.(K.km.s^{-1}.pc^2)^{-1}$]' )
+    plt.yscale('log')
+    plt.xlabel('redshift')
+    plt.ylabel('$\\rm \\rho_{H2} [M_{\\odot}.Mpc^{-3}]$')
+    plt.legend(handles = patchs, )
+    plt.show()
