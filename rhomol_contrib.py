@@ -59,6 +59,7 @@ if(not os.path.isfile(dictfile) ):
             field_size = tile_size * (np.pi/180.)**2
             rho_list = np.zeros((len(zmean), 3, N))
             B_list = np.zeros((len(zmean), len(line_list), 3, N))
+            Bratio_list = np.zeros((len(zmean), len(line_list), 3, N))
 
             bar = Bar(f'computing rhoH2(z) for {tile_sizeRA}deg x {tile_sizeDEC}deg', max=N)  
 
@@ -83,12 +84,24 @@ if(not os.path.isfile(dictfile) ):
                         B_list[i,j,0,l] = B_and_sn(ms_cat, line, rest_freq, z, dz, field_size)
                         B_list[i,j,2,l] = B_list[i,j,0,l] + B_list[i,j,1,l]
 
+                        if(j!= 0 ): 
+
+                            Bratio_list[i,j,0,l] = B_list[i,j,0,l] / B_list[i,0,0,l]
+                            Bratio_list[i,j,1,l] = B_list[i,j,1,l] / B_list[i,0,0,l]
+                            Bratio_list[i,j,2,l] = B_list[i,j,2,l] / B_list[i,0,0,l]
+
                 for j, (line, rest_freq) in enumerate(zip(line_list, rest_freq_list)):
 
                     dict_fields[f'{l}'][line] = {}
                     dict_fields[f'{l}'][line]['B_MS'] = B_list[:,j,0,l]
                     dict_fields[f'{l}'][line]['B_SB'] = B_list[:,j,1,l]
                     dict_fields[f'{l}'][line]['B_TOT'] = B_list[:,j,2,l]
+
+                    if(j!= 0 ): 
+
+                        dict_fields[f'{l}'][line]['B_MS/B_CO10'] = Bratio_list[:,j,0,l]
+                        dict_fields[f'{l}'][line]['B_SB/B_CO10'] = Bratio_list[:,j,1,l]
+                        dict_fields[f'{l}'][line]['B_TOT/B_CO10'] = Bratio_list[:,j,2,l]
 
                 dict_fields[f'{l}']['MS'] = rho_list[:,0,l]
                 dict_fields[f'{l}']['SB'] = rho_list[:,1,l]
@@ -115,6 +128,12 @@ if(not os.path.isfile(dictfile) ):
 
                     dict_fields[f'B_{key}_{line}_mean'] = np.mean(B_list[:,j,ikey,:], axis=-1)
                     dict_fields[f'B_{key}_{line}_std'] = np.std(B_list[:,j,ikey,:], axis=-1)
+                
+                    if(j!= 0 ): 
+
+                        dict_fields[f'{l}']['B_{key}/B_CO10_mean'] = np.mean(Bratio_list[:,j,ikey,l], axis=-1)
+                        dict_fields[f'{l}']['B_{key}/B_CO10_std'] = np.mean(Bratio_list[:,j,ikey,l], axis=-1)
+
 
             pickle.dump(dict_fields, open(file, 'wb'))
             bar.finish
@@ -131,76 +150,80 @@ else: dict = pickle.load( open(dictfile, 'rb'))
 
 colors_co = ('orange', 'r', 'b', 'cyan', 'g', 'purple', 'magenta', 'grey',)
 
-if(False): 
-        
+#Bnu vs z of lines
+if(True): 
     for j, (line, rest_freq) in enumerate(zip(line_list, rest_freq_list)):
-        plt.figure()
 
+
+        BS = 7; plt.rc('font', size=BS); plt.rc('axes', titlesize=BS); plt.rc('axes', labelsize=BS)
+        fig, (ax, axr) = plt.subplots(2, 1, sharex=True, sharey = 'row', 
+                                        gridspec_kw={'height_ratios': [2,1]}, 
+                                        figsize=(5,4.5), dpi = 200)
+    
         for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
             for key, c, ls in zip(("MS", 'SB'), ('r','g'), ('solid', '--')):
                 x = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['z']
                 y = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_{key}_{line}_mean']
                 dy = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_{key}_{line}_std']
-                if(tile_sizeRA == 3): plt.errorbar(x,y, c='k',ls=ls)
-                plt.fill_between(x,y-dy,y+dy, color=colors_co[j], alpha=0.2)
+                if(tile_sizeRA == 3): ax.errorbar(x,y, c='k',ls=ls)
+                ax.fill_between(x,y-dy,y+dy, color=colors_co[j], alpha=0.2)
+        
+        for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
+            x = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['z']
+            y = 100*dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'ratio_B_SB_{line}_TOT_mean']
+            dy =100* dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'ratio_B_SB_{line}_TOT_std']
+            if(tile_sizeRA == 3): axr.errorbar(x,y, c='k',ls=ls)
+            axr.fill_between(x,y-dy,y+dy, color=colors_co[j], alpha=0.2)
 
         patchs = []
         patch = mlines.Line2D([], [], color='k', linestyle='solid',  label='B$\\rm \\nu$ MS'); patchs.append(patch)
         patch = mlines.Line2D([], [], color='k', linestyle='--',     label='B$\\rm \\nu$ [Jy/sr] SB'); patchs.append(patch)
-        plt.title('$\\rm \\alpha_{CO}^{MS}=$'+f'{params["alpha_co_ms"]}, '+'$\\rm \\alpha_{CO}^{SB}=$'+f'{params["alpha_co_sb"]} '+
-                '[$\\rm M_{\\odot}.(K.km.s^{-1}.pc^2)^{-1}$]' )
-        plt.yscale('log')
-        plt.xlabel('redshift')
-        plt.ylabel('B$\\rm \\nu$ [Jy/sr]'+f' of {line}')
-        plt.legend(handles = patchs)
+        ax.set_yscale('log')
+        axr.set_xlabel('redshift')
+        ax.set_ylabel('B$\\rm \\nu$ [Jy/sr]'+f' of {line}')
+        axr.set_ylabel('$\\rm B^{SB}_{\\nu} / B^{MS+SB}_{\\nu}$ [%] ')
+        ax.legend(handles = patchs, frameon=False)
+        fig.tight_layout(); fig.subplots_adjust(hspace=.0)
         plt.savefig(f'{line}_SB_and_MS_Bnu.png')
-    plt.close()
+
+    plt.show()
 
 
-plt.figure()
-for j, (line, rest_freq) in enumerate(zip(line_list, rest_freq_list)):
-    for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
-        x = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['z']
-        y = 100*dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_SB_{line}_mean'] / dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_TOT_{line}_mean']
-        #dy = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_{key}_{line}_std']
-        if(tile_sizeRA == 3): plt.errorbar(x,y, c=colors_co[j],ls='solid')
-        #plt.fill_between(x,y-dy,y+dy, color=colors_co[j], alpha=0.2)
-
-for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
-    x = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['z']
-    y = 100*dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'SB_mean'] / dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'TOT_mean']
-    if(tile_sizeRA == 3): plt.errorbar(x,y, c='k',ls='solid')
-
-plt.ylim(5e-1, 7e1)
-plt.title('$\\rm \\alpha_{CO}^{MS}=$'+f'{params["alpha_co_ms"]}, '+'$\\rm \\alpha_{CO}^{SB}=$'+f'{params["alpha_co_sb"]} '+
-        '[$\\rm M_{\\odot}.(K.km.s^{-1}.pc^2)^{-1}$]' )
-plt.yscale('log')
-plt.xlabel('redshift')
-plt.ylabel('100*($\\rm B^{SB}_{\\nu} / B^{TOT}_{\\nu}$)')
-plt.savefig(f'SB_MS_contrib_to_Bnu.png')
-plt.show()
 #Rho plot
-
 if(False):
-    plt.figure()
+
+    BS = 7; plt.rc('font', size=BS); plt.rc('axes', titlesize=BS); plt.rc('axes', labelsize=BS)
+    fig, (ax, axr) = plt.subplots(2, 1, sharex=True, sharey = 'row', 
+                                  gridspec_kw={'height_ratios': [2,1]}, 
+                                  figsize=(5,4.5), dpi = 200)
+
     for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
         for key, c, ls in zip(("MS", 'SB'), ('r','g'), ('solid', '--')):
             
             x = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['z']
             y = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'{key}_mean']
             dy = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'{key}_std']
-            if(tile_sizeRA == 3): plt.errorbar(x,y, c='k',ls=ls)
-            plt.fill_between(x,y-dy,y+dy, color=c, alpha=0.2)
+            if(tile_sizeRA == 3): ax.errorbar(x,y, c='k',ls=ls)
+            ax.fill_between(x,y-dy,y+dy, color=c, alpha=0.2)
+        
+        y = 100*(dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['ratio_rho_SB_TOT_mean'])
+        dy = 100*(dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['ratio_rho_SB_TOT_std'])
+        if(tile_sizeRA == 3): axr.errorbar(x,y, ls='--',c='k')
+        axr.fill_between(x,y-dy,y+dy, color='g', alpha=0.2)
 
     patchs = []
     patch = mlines.Line2D([], [], color='k', linestyle='solid',  label='$\\rm \\rho_{H2}$ MS'); patchs.append(patch)
     patch = mlines.Line2D([], [], color='k', linestyle='--',     label='$\\rm \\rho_{H2}$ SB'); patchs.append(patch)
     patch = mpatches.Patch(color='r', label='field-to-field variance for MS' ); patchs.append(patch)
     patch = mpatches.Patch(color='g', label='field-to-field variance for SB' ); patchs.append(patch)
-    plt.title('$\\rm \\alpha_{CO}^{MS}=$'+f'{params["alpha_co_ms"]}, '+'$\\rm \\alpha_{CO}^{SB}=$'+f'{params["alpha_co_sb"]} '+
+    
+    ax.set_title('$\\rm \\alpha_{CO}^{MS}=$'+f'{params["alpha_co_ms"]}, '+'$\\rm \\alpha_{CO}^{SB}=$'+f'{params["alpha_co_sb"]} '+
             '[$\\rm M_{\\odot}.(K.km.s^{-1}.pc^2)^{-1}$]' )
-    plt.yscale('log')
-    plt.xlabel('redshift')
-    plt.ylabel('$\\rm \\rho_{H2} [M_{\\odot}.Mpc^{-3}]$')
-    plt.legend(handles = patchs, )
+    ax.set_yscale('log')
+    axr.set_xlabel('redshift')
+    ax.set_ylabel('$\\rm \\rho_{H2} [M_{\\odot}.Mpc^{-3}]$')
+    axr.set_ylabel('$\\rm \\rho^{SB}_{H2} / \\rho^{(SB+MS)}_{H2}$ [%]')
+    ax.legend(handles = patchs, frameon=False)
+    fig.tight_layout(); fig.subplots_adjust(hspace=.0)
+    plt.savefig(f'rhoh2_alphaCOMS_{params["alpha_co_ms"]}_alphaCOSB_{params["alpha_co_sb"]}.pdf',transparent=True)
     plt.show()
