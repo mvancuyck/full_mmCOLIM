@@ -167,13 +167,13 @@ else: dict = pickle.load( open(dictfile, 'rb'))
 colors_co = ('orange', 'r', 'b', 'cyan', 'g', 'purple', 'magenta', 'grey',)
 
 #Bnu vs z of lines
-if(False): 
+if(True): 
 
     for j, (line, rest_freq) in enumerate(zip(line_list, rest_freq_list)):
 
         BS = 7; plt.rc('font', size=BS); plt.rc('axes', titlesize=BS); plt.rc('axes', labelsize=BS)
-        fig, (ax, axr, axrr, axrrr) = plt.subplots(4, 1, sharex=True, sharey = 'row', 
-                                        gridspec_kw={'height_ratios': [2,1,1,1]}, 
+        fig, (ax, axs, axr, axrr, axrrr) = plt.subplots(5, 1, sharex=True, sharey = 'row', 
+                                        gridspec_kw={'height_ratios': [2,1,1,1,1]}, 
                                         figsize=(5,4.5), dpi = 200)
     
         for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
@@ -184,6 +184,17 @@ if(False):
                 if(tile_sizeRA == 3): ax.errorbar(x,y, c='k',ls=ls)
                 ax.fill_between(x,y-dy,y+dy, color=colors_co[j], alpha=0.2)
         
+        for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
+            x = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['z']
+            y = 100*dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'ratio_B_SB_MS_{line}_mean']
+            dy =100* dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'ratio_B_SB_MS_{line}_std']
+            if(tile_sizeRA == 3): 
+                axs.errorbar(x,y, c='k',ls=ls)
+                if(j==0): print(y)
+            axs.fill_between(x,y-dy,y+dy, color=colors_co[j], alpha=0.2)
+        axs.set_ylabel('$\\rm B^{SB}_{\\nu} / B^{MS}_{\\nu}$ [%]')
+
+
         for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
             x = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['z']
             y = 100*dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'ratio_B_SB_{line}_TOT_mean']
@@ -257,7 +268,7 @@ if(False):
 
 
 #Rho plot
-if(True):
+if(False):
 
     BS = 10; plt.rc('font', size=BS); plt.rc('axes', titlesize=BS); plt.rc('axes', labelsize=BS)
     fig, (ax, axr,axrr) = plt.subplots(3, 1, sharex=True, sharey = 'row', 
@@ -277,7 +288,6 @@ if(True):
         dy = 100*(dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['ratio_rho_SB_TOT_std'])
         if(tile_sizeRA == 3): axr.errorbar(x,y, ls='--',c='k')
         axr.fill_between(x,y-dy,y+dy, color='g', alpha=0.2)
-
 
         y = 100*(dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['ratio_rho_sb_ms_mean'])
         dy = 100*(dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['ratio_rho_sb_ms_std'])
