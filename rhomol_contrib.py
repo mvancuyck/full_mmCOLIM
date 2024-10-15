@@ -158,14 +158,13 @@ else: dict = pickle.load( open(dictfile, 'rb'))
 colors_co = ('orange', 'r', 'b', 'cyan', 'g', 'purple', 'magenta', 'grey',)
 
 #Bnu vs z of lines
-if(True): 
+if(False): 
 
-    
     for j, (line, rest_freq) in enumerate(zip(line_list, rest_freq_list)):
 
         BS = 7; plt.rc('font', size=BS); plt.rc('axes', titlesize=BS); plt.rc('axes', labelsize=BS)
-        fig, (ax, axr, axrr) = plt.subplots(3, 1, sharex=True, sharey = 'row', 
-                                        gridspec_kw={'height_ratios': [2,1,1]}, 
+        fig, (ax, axr, axrr, axrrr) = plt.subplots(4, 1, sharex=True, sharey = 'row', 
+                                        gridspec_kw={'height_ratios': [2,1,1,1]}, 
                                         figsize=(5,4.5), dpi = 200)
     
         for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
@@ -185,37 +184,75 @@ if(True):
 
         for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
             x = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['z']
-            y = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_SB_{line}/B_CO32_mean']
-            #dy =dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_SB_{line}/B_CO32_std']
-            if(tile_sizeRA == 3): axrr.errorbar(x,y, c='g',ls=':')
-            #axrr.fill_between(x,y-dy,y+dy, color='g', alpha=0.2)
+            yA = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_SB_{line}/B_CO32_mean']
+            dyA =dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_SB_{line}/B_CO32_std']
+            if(tile_sizeRA == 3): axrr.errorbar(x,yA, c='g',ls=':')
+            axrr.fill_between(x,yA-dyA,yA+dyA, color='g', alpha=0.2)
 
-            y = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_MS_{line}/B_CO32_mean']
-            #dy =dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_MS_{line}/B_CO32_std']
-            if(tile_sizeRA == 3): axrr.errorbar(x,y, c='r',ls='--')
-            #axrr.fill_between(x,y-dy,y+dy, color='r', alpha=0.2)
-        axrr.set_ylabel('$\\rm B^{TOT}_{\\nu} / B^{CO32,SB+MS}_{\\nu}$')
+            yB = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_MS_{line}/B_CO32_mean']
+            dyB =dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_MS_{line}/B_CO32_std']
+            if(tile_sizeRA == 3): axrr.errorbar(x,yB, c='r',ls='--')
+            axrr.fill_between(x,yB-dyB,yB+dyB, color='r', alpha=0.2)
+
+            y = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_TOT_{line}/B_CO32_mean']
+            dy =dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_TOT_{line}/B_CO32_std']
+            if(tile_sizeRA == 3): axrr.errorbar(x,y, c='b',ls='--')
+            axrr.fill_between(x,y-dy,y+dy, color='b', alpha=0.2)
+
+            patchs = []
+            patch = mlines.Line2D([], [], color='r', linestyle='solid', label='MS'); patchs.append(patch)
+            patch = mlines.Line2D([], [], color='g', linestyle='solid', label='SB'); patchs.append(patch)
+            patch = mlines.Line2D([], [], color='b', linestyle='solid', label='MS+SB'); patchs.append(patch)
+
+            axrr.legend(handles = patchs, frameon=False)
+
+            #if(tile_sizeRA == 3): axrr.errorbar(x,yB+yA, c='k')
+
+        axrr.set_ylabel('$\\rm B_{\\nu} / B^{CO32,(SB+MS)}_{\\nu}$')
+
+
+        for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
+            x = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['z']
+            yA = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_SB_{line}/B_CO10_mean']
+            dyA =dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_SB_{line}/B_CO10_std']
+            if(tile_sizeRA == 3): axrrr.errorbar(x,yA, c='g',ls=':')
+            axrrr.fill_between(x,yA-dyA,yA+dyA, color='g', alpha=0.2)
+
+            yB = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_MS_{line}/B_CO10_mean']
+            dyB =dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_MS_{line}/B_CO10_std']
+            if(tile_sizeRA == 3): axrrr.errorbar(x,yB, c='r',ls='--')
+            axrrr.fill_between(x,yB-dyB,yB+dyB, color='r', alpha=0.2)
+
+            y = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_TOT_{line}/B_CO10_mean']
+            dy =dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_TOT_{line}/B_CO10_std']
+            if(tile_sizeRA == 3): axrrr.errorbar(x,y, c='b',ls='--')
+            axrrr.fill_between(x,y-dy,y+dy, color='b', alpha=0.2)
+
+        axrrr.set_ylabel('$\\rm B_{\\nu} / B^{CO10,(SB+MS)}_{\\nu}$')
+
+        axrrr.set_ylim(0,7.5)
+        axrr.set_ylim(0,7.5)
 
         patchs = []
         patch = mlines.Line2D([], [], color='k', linestyle='solid',  label='B$\\rm \\nu$ MS'); patchs.append(patch)
-        patch = mlines.Line2D([], [], color='k', linestyle='--',     label='B$\\rm \\nu$ [Jy/sr] SB'); patchs.append(patch)
+        patch = mlines.Line2D([], [], color='k', linestyle='--',     label='B$\\rm \\nu$ SB'); patchs.append(patch)
         ax.set_yscale('log')
         axrr.set_xlabel('redshift')
         ax.set_ylabel('B$\\rm \\nu$ [Jy/sr]'+f' of {line}')
         axr.set_ylabel('$\\rm B^{SB}_{\\nu} / B^{MS+SB}_{\\nu}$ [%] ')
         ax.legend(handles = patchs, frameon=False)
         fig.tight_layout(); fig.subplots_adjust(hspace=.0)
-        plt.savefig(f'{line}_SB_and_MS_Bnu.png')
+        plt.savefig(f'{line}_SB_and_MS_Bnu.png', transparent=True)
 
     plt.show()
 
 
 #Rho plot
-if(False):
+if(True):
 
-    BS = 7; plt.rc('font', size=BS); plt.rc('axes', titlesize=BS); plt.rc('axes', labelsize=BS)
-    fig, (ax, axr) = plt.subplots(2, 1, sharex=True, sharey = 'row', 
-                                  gridspec_kw={'height_ratios': [2,1]}, 
+    BS = 10; plt.rc('font', size=BS); plt.rc('axes', titlesize=BS); plt.rc('axes', labelsize=BS)
+    fig, (ax, axr,axrr) = plt.subplots(3, 1, sharex=True, sharey = 'row', 
+                                  gridspec_kw={'height_ratios': [2,1,1]}, 
                                   figsize=(5,4.5), dpi = 200)
 
     for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
@@ -229,8 +266,14 @@ if(False):
         
         y = 100*(dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['ratio_rho_SB_TOT_mean'])
         dy = 100*(dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['ratio_rho_SB_TOT_std'])
-        if(tile_sizeRA == 3): axr.errorbar(x,y, ls='--',c='k')
+        if(tile_sizeRA == 3): axr.errorbar(x,y, ls='--',c='k'); print(y)
         axr.fill_between(x,y-dy,y+dy, color='g', alpha=0.2)
+
+
+        y = 100*(dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['ratio_rho_SB_MS_mean'])
+        dy = 100*(dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['ratio_rho_SB_MS_std'])
+        if(tile_sizeRA == 3): axrr.errorbar(x,y, ls='--',c='k'); print(y)
+        axrr.fill_between(x,y-dy,y+dy, color='g', alpha=0.2)
 
     patchs = []
     patch = mlines.Line2D([], [], color='k', linestyle='solid',  label='$\\rm \\rho_{H2}$ MS'); patchs.append(patch)
