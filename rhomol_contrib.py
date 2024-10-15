@@ -59,7 +59,6 @@ if(not os.path.isfile(dictfile) ):
             field_size = tile_size * (np.pi/180.)**2
             rho_list = np.zeros((len(zmean), 3, N))
             B_list = np.zeros((len(zmean), len(line_list), 3, N))
-            Bratio_list = np.zeros((len(zmean), len(line_list), 3, N))
             Bratio_list_ttt = np.zeros((len(zmean), len(line_list), 3, N))
 
             bar = Bar(f'computing rhoH2(z) for {tile_sizeRA}deg x {tile_sizeDEC}deg', max=N)  
@@ -87,12 +86,6 @@ if(not os.path.isfile(dictfile) ):
 
                     for j, (line, rest_freq) in enumerate(zip(line_list, rest_freq_list)):
 
-                        if(j!= 0 ): 
-
-                            Bratio_list[i,j,0,l] = B_list[i,j,0,l] / B_list[i,0,2,l]
-                            Bratio_list[i,j,1,l] = B_list[i,j,1,l] / B_list[i,0,2,l]
-                            Bratio_list[i,j,2,l] = B_list[i,j,2,l] / B_list[i,0,2,l]
-
                         Bratio_list_ttt[i,j,0,l] = B_list[i,j,0,l] / B_list[i,2,2,l]
                         Bratio_list_ttt[i,j,1,l] = B_list[i,j,1,l] / B_list[i,2,2,l]
                         Bratio_list_ttt[i,j,2,l] = B_list[i,j,2,l] / B_list[i,2,2,l]
@@ -104,17 +97,9 @@ if(not os.path.isfile(dictfile) ):
                     dict_fields[f'{l}'][line]['B_SB'] = B_list[:,j,1,l]
                     dict_fields[f'{l}'][line]['B_TOT'] = B_list[:,j,2,l]
 
-                for j, (line, rest_freq) in enumerate(zip(line_list, rest_freq_list)):
-
                     dict_fields[f'{l}'][line]['B_MS/B_CO32'] = Bratio_list_ttt[:,j,0,l]
                     dict_fields[f'{l}'][line]['B_SB/B_CO32'] = Bratio_list_ttt[:,j,1,l]
                     dict_fields[f'{l}'][line]['B_TOT/B_CO32'] = Bratio_list_ttt[:,j,2,l]
-
-                    if(j!= 0 ): 
-
-                        dict_fields[f'{l}'][line]['B_MS/B_CO10'] = Bratio_list[:,j,0,l]
-                        dict_fields[f'{l}'][line]['B_SB/B_CO10'] = Bratio_list[:,j,1,l]
-                        dict_fields[f'{l}'][line]['B_TOT/B_CO10'] = Bratio_list[:,j,2,l]
 
                 dict_fields[f'{l}']['MS'] = rho_list[:,0,l]
                 dict_fields[f'{l}']['SB'] = rho_list[:,1,l]
@@ -143,11 +128,8 @@ if(not os.path.isfile(dictfile) ):
                     dict_fields[f'B_{key}_{line}_std'] = np.std(B_list[:,j,ikey,:], axis=-1)
                 
                     dict_fields[f'B_{key}_{line}/B_CO32_mean'] = np.mean(Bratio_list_ttt[:,j,ikey,:], axis=-1)
-                    dict_fields[f'B_{key}_{line}/B_CO32_std'] = np.mean(Bratio_list_ttt[:,j,ikey,:], axis=-1)
+                    dict_fields[f'B_{key}_{line}/B_CO32_std'] = np.std(Bratio_list_ttt[:,j,ikey,:], axis=-1)
 
-                    if(j!= 0): 
-                        dict_fields[f'B_{key}_{line}/B_CO10_mean'] = np.mean(Bratio_list[:,j,ikey,:], axis=-1)
-                        dict_fields[f'B_{key}_{line}/B_CO10_std'] = np.mean(Bratio_list[:,j,ikey,:], axis=-1)
 
             pickle.dump(dict_fields, open(file, 'wb'))
             bar.finish
@@ -166,8 +148,9 @@ colors_co = ('orange', 'r', 'b', 'cyan', 'g', 'purple', 'magenta', 'grey',)
 
 #Bnu vs z of lines
 if(True): 
-    for j, (line, rest_freq) in enumerate(zip(line_list, rest_freq_list)):
 
+    
+    for j, (line, rest_freq) in enumerate(zip(line_list, rest_freq_list)):
 
         BS = 7; plt.rc('font', size=BS); plt.rc('axes', titlesize=BS); plt.rc('axes', labelsize=BS)
         fig, (ax, axr, axrr) = plt.subplots(3, 1, sharex=True, sharey = 'row', 
@@ -189,14 +172,18 @@ if(True):
             if(tile_sizeRA == 3): axr.errorbar(x,y, c='k',ls=ls)
             axr.fill_between(x,y-dy,y+dy, color=colors_co[j], alpha=0.2)
 
-        
         for tile_sizeRA, tile_sizeDEC, _ in params['tile_sizes']: 
             x = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['z']
-            if(j >0):
-                y = 100*dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_SB_{line}/B_CO10_mean']
-                dy =100* dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_SB_{line}/B_CO10_std']
-                if(tile_sizeRA == 3): axr.errorbar(x,y, c='k',ls=ls)
-                axrr.fill_between(x,y-dy,y+dy, color='g', alpha=0.2)
+            y = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_SB_{line}/B_CO32_mean']
+            #dy =dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_SB_{line}/B_CO32_std']
+            if(tile_sizeRA == 3): axrr.errorbar(x,y, c='g',ls=':')
+            #axrr.fill_between(x,y-dy,y+dy, color='g', alpha=0.2)
+
+            y = dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_MS_{line}/B_CO32_mean']
+            #dy =dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg'][f'B_MS_{line}/B_CO32_std']
+            if(tile_sizeRA == 3): axrr.errorbar(x,y, c='r',ls='--')
+            #axrr.fill_between(x,y-dy,y+dy, color='r', alpha=0.2)
+        axrr.set_ylabel('$\\rm B^{TOT}_{\\nu} / B^{CO32,SB+MS}_{\\nu}$')
 
         patchs = []
         patch = mlines.Line2D([], [], color='k', linestyle='solid',  label='B$\\rm \\nu$ MS'); patchs.append(patch)
@@ -205,7 +192,6 @@ if(True):
         axrr.set_xlabel('redshift')
         ax.set_ylabel('B$\\rm \\nu$ [Jy/sr]'+f' of {line}')
         axr.set_ylabel('$\\rm B^{SB}_{\\nu} / B^{MS+SB}_{\\nu}$ [%] ')
-        axrr.set_ylabel('$\\rm B^{SB}_{\\nu} / B^{CO10,SB+MS}_{\\nu}$')
         ax.legend(handles = patchs, frameon=False)
         fig.tight_layout(); fig.subplots_adjust(hspace=.0)
         plt.savefig(f'{line}_SB_and_MS_Bnu.png')
