@@ -118,7 +118,7 @@ if(not os.path.isfile(dictfile) ):
 
             for key, ikey in zip(('MS', 'SB', 'TOT'), (0,1,2)):
 
-                if(key is not 'TOT'):
+                if(key != 'TOT'):
 
                     dict_fields[f'ratio_rho_{key}_TOT_mean'] = np.mean(rho_list[:,ikey,:]/rho_list[:,2,:], axis=-1)
                     dict_fields[f'ratio_rho_{key}_TOT_std']  = np.std(rho_list[:,ikey,:]/rho_list[:,2,:], axis=-1)
@@ -128,7 +128,7 @@ if(not os.path.isfile(dictfile) ):
 
                 for j, (line, rest_freq) in enumerate(zip(line_list, rest_freq_list)):
 
-                    if(key is not 'TOT'):
+                    if(key != 'TOT'):
 
                         dict_fields[f'ratio_B_{key}_{line}_TOT_mean'] = np.mean(B_list[:,j,ikey,:]/B_list[:,j,2,:], axis=-1)
                         dict_fields[f'ratio_B_{key}_{line}_TOT_std']  = np.std(B_list[:,j,ikey,:]/B_list[:,j,2,:], axis=-1)
@@ -139,6 +139,8 @@ if(not os.path.isfile(dictfile) ):
                     dict_fields[f'B_{key}_{line}/B_CO32_mean'] = np.mean(Bratio_list_ttt[:,j,ikey,:], axis=-1)
                     dict_fields[f'B_{key}_{line}/B_CO32_std'] = np.std(Bratio_list_ttt[:,j,ikey,:], axis=-1)
 
+                    dict_fields[f'B_{key}_{line}/B_CO10_mean'] = np.mean(Bratio_list[:,j,ikey,:], axis=-1)
+                    dict_fields[f'B_{key}_{line}/B_CO10_std'] = np.std(Bratio_list[:,j,ikey,:], axis=-1)
 
             pickle.dump(dict_fields, open(file, 'wb'))
             bar.finish
