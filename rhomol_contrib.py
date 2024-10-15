@@ -101,6 +101,7 @@ if(not os.path.isfile(dictfile) ):
                     dict_fields[f'{l}'][line]['B_MS'] = B_list[:,j,0,l]
                     dict_fields[f'{l}'][line]['B_SB'] = B_list[:,j,1,l]
                     dict_fields[f'{l}'][line]['B_TOT'] = B_list[:,j,2,l]
+                    dict_fields[f'{l}'][line]['ratio_B_SB_MS'] = B_list[:,j,1,l] / B_list[:,j,0,l]
 
                     dict_fields[f'{l}'][line]['B_MS/B_CO32'] = Bratio_list_ttt[:,j,0,l]
                     dict_fields[f'{l}'][line]['B_SB/B_CO32'] = Bratio_list_ttt[:,j,1,l]
@@ -116,6 +117,10 @@ if(not os.path.isfile(dictfile) ):
 
                 bar.next()
 
+        
+            dict_fields[f'ratio_rho_sb_ms_mean'] = np.mean(rho_list[:,1,:]/rho_list[:,0,:], axis=-1)
+            dict_fields[f'ratio_rho_sb_ms_std']  = np.std(rho_list[:,1,:]/rho_list[:,0,:], axis=-1)
+
             for key, ikey in zip(('MS', 'SB', 'TOT'), (0,1,2)):
 
                 if(key != 'TOT'):
@@ -125,6 +130,7 @@ if(not os.path.isfile(dictfile) ):
 
                 dict_fields[f'{key}_mean'] = np.mean(rho_list[:,ikey,:], axis=-1)
                 dict_fields[f'{key}_std']  = np.std(rho_list[:,ikey,:], axis=-1)
+
 
                 for j, (line, rest_freq) in enumerate(zip(line_list, rest_freq_list)):
 
@@ -141,6 +147,9 @@ if(not os.path.isfile(dictfile) ):
 
                     dict_fields[f'B_{key}_{line}/B_CO10_mean'] = np.mean(Bratio_list[:,j,ikey,:], axis=-1)
                     dict_fields[f'B_{key}_{line}/B_CO10_std'] = np.std(Bratio_list[:,j,ikey,:], axis=-1)
+
+                    dict_fields[f'ratio_B_SB_MS_{line}_mean'] = np.mean(B_list[:,j,1,:] / B_list[:,j,0,:], axis=-1)
+                    dict_fields[f'ratio_B_SB_MS_{line}_std'] = np.std(B_list[:,j,1,:] / B_list[:,j,0,:], axis=-1)
 
             pickle.dump(dict_fields, open(file, 'wb'))
             bar.finish
@@ -270,8 +279,8 @@ if(True):
         axr.fill_between(x,y-dy,y+dy, color='g', alpha=0.2)
 
 
-        y = 100*(dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['ratio_rho_SB_MS_mean'])
-        dy = 100*(dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['ratio_rho_SB_MS_std'])
+        y = 100*(dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['ratio_rho_SB_TOT_mean'])
+        dy = 100*(dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['ratio_rho_SB_TOT_std'])
         if(tile_sizeRA == 3): axrr.errorbar(x,y, ls='--',c='k'); print(y)
         axrr.fill_between(x,y-dy,y+dy, color='g', alpha=0.2)
 
