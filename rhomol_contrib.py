@@ -275,12 +275,12 @@ if(True):
         
         y = 100*(dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['ratio_rho_SB_TOT_mean'])
         dy = 100*(dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['ratio_rho_SB_TOT_std'])
-        if(tile_sizeRA == 3): axr.errorbar(x,y, ls='--',c='k'); print(y)
+        if(tile_sizeRA == 3): axr.errorbar(x,y, ls='--',c='k')
         axr.fill_between(x,y-dy,y+dy, color='g', alpha=0.2)
 
 
-        y = 100*(dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['ratio_rho_SB_TOT_mean'])
-        dy = 100*(dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['ratio_rho_SB_TOT_std'])
+        y = 100*(dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['ratio_rho_sb_ms_mean'])
+        dy = 100*(dict[f'{tile_sizeRA}deg_x_{tile_sizeDEC}deg']['ratio_rho_sb_ms_std'])
         if(tile_sizeRA == 3): axrr.errorbar(x,y, ls='--',c='k'); print(y)
         axrr.fill_between(x,y-dy,y+dy, color='g', alpha=0.2)
 
