@@ -60,6 +60,7 @@ if(not os.path.isfile(dictfile) ):
             rho_list = np.zeros((len(zmean), 3, N))
             B_list = np.zeros((len(zmean), len(line_list), 3, N))
             Bratio_list_ttt = np.zeros((len(zmean), len(line_list), 3, N))
+            Bratio_list = np.zeros((len(zmean), len(line_list), 3, N))
 
             bar = Bar(f'computing rhoH2(z) for {tile_sizeRA}deg x {tile_sizeDEC}deg', max=N)  
 
@@ -90,6 +91,10 @@ if(not os.path.isfile(dictfile) ):
                         Bratio_list_ttt[i,j,1,l] = B_list[i,j,1,l] / B_list[i,2,2,l]
                         Bratio_list_ttt[i,j,2,l] = B_list[i,j,2,l] / B_list[i,2,2,l]
 
+                        Bratio_list[i,j,0,l] = B_list[i,j,0,l] / B_list[i,0,2,l]
+                        Bratio_list[i,j,1,l] = B_list[i,j,1,l] / B_list[i,0,2,l]
+                        Bratio_list[i,j,2,l] = B_list[i,j,2,l] / B_list[i,0,2,l]
+
                 for j, (line, rest_freq) in enumerate(zip(line_list, rest_freq_list)):
 
                     dict_fields[f'{l}'][line] = {}
@@ -100,6 +105,10 @@ if(not os.path.isfile(dictfile) ):
                     dict_fields[f'{l}'][line]['B_MS/B_CO32'] = Bratio_list_ttt[:,j,0,l]
                     dict_fields[f'{l}'][line]['B_SB/B_CO32'] = Bratio_list_ttt[:,j,1,l]
                     dict_fields[f'{l}'][line]['B_TOT/B_CO32'] = Bratio_list_ttt[:,j,2,l]
+
+                    dict_fields[f'{l}'][line]['B_MS/B_CO10'] = Bratio_list[:,j,0,l]
+                    dict_fields[f'{l}'][line]['B_SB/B_CO10'] = Bratio_list[:,j,1,l]
+                    dict_fields[f'{l}'][line]['B_TOT/B_CO10'] = Bratio_list[:,j,2,l]
 
                 dict_fields[f'{l}']['MS'] = rho_list[:,0,l]
                 dict_fields[f'{l}']['SB'] = rho_list[:,1,l]
