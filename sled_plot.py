@@ -1,5 +1,5 @@
 from fcts import *
-from gen_all_sizes_cubes import *
+from gen_all_sizes_cubes_and_cat import *
 from functools import partial
 from multiprocessing import Pool, cpu_count
 from matplotlib import gridspec
@@ -96,6 +96,67 @@ def compute_sled_cat(z_list, dz_list, simu = 'uchuu', recompute = False):
 
     return all_I, ms_I, sb_I
 
+def contrib_ms_sb(z_list, dz_list, recompute_sleds): 
+
+    all_I, ms_I, sb_I = compute_sled_cat(z_list, dz_list, simu = 'bolshoi', recompute = recompute_sleds)
+
+    #----
+    for idz, dz in enumerate(dz_list):
+        #---------------------------
+        BS=10; plt.rc('font', size=BS); plt.rc('axes', titlesize=BS); plt.rc('axes', labelsize=BS); mks=6; lw=2
+        fig, ax = plt.subplots(figsize=(6,3), dpi=200) 
+        #for z, zi, c in zip(z_list, range(len(z_list)), colors ):
+        patchs = []
+        colors_co = ('orange', 'r', 'b', 'cyan', 'g', 'purple', 'magenta', 'grey',)
+
+        ax2 = ax.twinx()
+        ax2.set_ylabel('Fraction of SB objects [%]')
+        ax2.set_yscale('log')
+
+        ax2.errorbar( z_list, 100 * (sb_I[:, idz, 0, -1] / all_I[:, idz, 0, -1 ]), 
+                         c='k', fmt='-o', lw=lw, markersize=mks)
+        patch = mlines.Line2D([], [], color='k', linestyle="solid", marker="o", label='SB fraction', markersize=mks, lw=lw); patchs.append(patch)
+
+        
+         
+        for j, (line, rest_freq, c) in enumerate(zip(line_list[:8], rest_freq_list[:8], colors_co)):
+            ax.errorbar( z_list, 100 * (sb_I[:, idz, j, 5] / all_I[:, idz, j, 5]), 
+                         c=c, fmt='--D', lw=lw, markersize=mks)
+            patch = mlines.Line2D([], [], color=c, linestyle="--", marker="D", label='$\\rm J_{up}$'+f'={j+1}', markersize=mks, lw=lw); patchs.append(patch)
+        
+    ax.set_xlabel('redshift')
+    ax.set_yscale("log")
+    ax.set_ylim(2,45)
+    ax2.set_ylim(2,45)
+    ax2.legend(handles = patchs, loc='center left', bbox_to_anchor=(1.2, 0.5), fontsize=BS, frameon=False)
+    ax.set_ylabel('Contribution of SB objects \n to $\\rm B_{\\nu}^{CO(J_{up}-J_{up}-1})$ [%]')
+    fig.tight_layout()
+    for extension in ("png", "pdf"): plt.savefig(f"figs/sb_ms.{extension}", transparent=True)
+    #----
+
+    for idz, dz in enumerate(dz_list):
+        #---------------------------
+        BS=10; plt.rc('font', size=BS); plt.rc('axes', titlesize=BS); plt.rc('axes', labelsize=BS); mks=6; lw=2
+        fig, ax = plt.subplots(figsize=(6,3), dpi=200) 
+        patchs = []
+        colors_co = ('orange', 'r', 'b', 'cyan', 'g', 'purple', 'magenta', 'grey',)
+        for j, (line, rest_freq, c) in enumerate(zip(line_list[:8], rest_freq_list[:8], colors_co)):
+            if(j!=5): continue
+            ax.errorbar( z_list, (sb_I[:, idz, j, 5] ), c=c, fmt='--o', lw=lw, markersize=mks)
+            ax.errorbar( z_list, (ms_I[:, idz, j, 5] ), c=c, fmt=':D', lw=lw, markersize=mks, mfc='none')
+            ax.errorbar( z_list, (ms_I[:, idz, j, 5]+sb_I[:, idz, j, 5]), c=c, fmt='x', lw=lw, markersize=mks)
+
+            patch = mlines.Line2D([], [], color=c, linestyle="--", marker="D", label='$\\rm J_{up}$'+f'={j+1}', markersize=mks, lw=lw); patchs.append(patch)
+
+    ax.set_yscale('log')
+    ax.set_xlabel('redshift')
+    ax.set_ylabel('Background Intensity [Jy/sr]')
+    ax.set_yscale("log")
+    fig.tight_layout()
+    for extension in ("png", "pdf"): plt.savefig(f"figs/sb_ms.{extension}", transparent=True)
+
+    plt.show()
+
 def plot_sled_fig(nslice, z_list, dz_list, recompute_sleds, toembed=False, dtype='_with_interlopers'): #_with_interlopers
 
     '''
@@ -103,7 +164,7 @@ def plot_sled_fig(nslice, z_list, dz_list, recompute_sleds, toembed=False, dtype
     '''
 
 
-    I_dict, ms_I, sb_I = compute_sled_cat(z_list, dz_list, simu = 'uchuu', recompute = recompute_sleds)
+    I_dict, ms_I, sb_I = compute_sled_cat(z_list, dz_list, simu = 'bolshoi', recompute = recompute_sleds)
     SLED_mes = co_sled_from_nsubfields(nslice, 2, z_list, dz_list, 9, 0.15, dtype=dtype, toembed=toembed)
 
     dict = {'SLED_mes':SLED_mes}
@@ -137,7 +198,10 @@ def plot_sled_fig(nslice, z_list, dz_list, recompute_sleds, toembed=False, dtype
             
             axr.errorbar(J_list+shift, np.mean(SLED_mes[:, zi, idz, 1:], axis=0) / I_dict[zi, idz, :,N]-1, 
                          yerr=np.std(SLED_mes[:, zi, idz, 1:], axis=0) / I_dict[zi, idz, :,N], fmt='o', c=c, markersize=2, lw=1)
-            print('z=',z,',', np.round(np.std(SLED_mes[:, zi, idz, 1:], axis=0) / I_dict[zi, idz, :,N], 2),)
+            
+            print('z=',z,',', np.round(I_dict[zi, idz, :,N] , 2),)
+            #print('z=',z,',', np.round(np.std(SLED_mes[, zi, idz, 1:], axis=0) / I_dict[zi, idz, :,N], 2),)
+            #print('at z=',z, np.round(100*np.std(SLED_mes[:, zi, idz, 1:], axis=0)/ np.mean(SLED_mes[:, zi, idz, 1:], axis=0),1))
 
             patch = mpatches.Patch(color=c, label=f'z={z}')
             patchs.append(patch)
@@ -192,30 +256,7 @@ def plot_sled_fig(nslice, z_list, dz_list, recompute_sleds, toembed=False, dtype
         for extension in ("png", "pdf"): plt.savefig(f"sled_dtype{dtype}_dz{dz}_nslice{nslice}_ppoints.{extension}", transparent=True)
         '''
 
-def contrib_ms_sb(z_list, dz_list, recompute_sleds): 
 
-    all_I, ms_I, sb_I = compute_sled_cat(z_list, dz_list, simu = 'uchuu', recompute = recompute_sleds)
-
-    for idz, dz in enumerate(dz_list):
-        #---------------------------
-        BS=10; plt.rc('font', size=BS); plt.rc('axes', titlesize=BS); plt.rc('axes', labelsize=BS); mks=6; lw=2
-        fig = plt.figure(figsize=(6,3), dpi=200) 
-        #for z, zi, c in zip(z_list, range(len(z_list)), colors ):
-        patchs = []
-        colors_co = ('orange', 'r', 'b', 'cyan', 'g', 'purple', 'magenta', 'grey',)
-         
-        for j, (line, rest_freq, c) in enumerate(zip(line_list[:8], rest_freq_list[:8], colors_co)):
-            plt.errorbar( z_list, 100 -100 * (sb_I[:, idz, j, 5] / all_I[:, idz, j, 5]), c=c, fmt='--D', lw=lw, markersize=mks)
-            patch = mlines.Line2D([], [], color=c, linestyle="--", marker="D", label='$\\rm J_{up}$'+f'={j+1}', markersize=mks, lw=lw); patchs.append(patch)
-        
-        plt.legend(handles = patchs, loc='center left', bbox_to_anchor=(1.05, 0.5), fontsize=BS)
-        plt.xlabel('redshift')
-        plt.yscale("log")
-        plt.ylabel('Contribution of SB objects \n to $\\rm B_{\\nu}^{CO(J_{up}-J_{up}-1}$ [%]')
-        plt.tight_layout()
-        for extension in ("png", "pdf"): plt.savefig(f"figs/sb_ms.{extension}", transparent=True)
-        
-    plt.show()
 
 def co_sled_from_nsubfields(nslice, i_ref, z_list, dz_list, field_size, klim,
                             interlopers = None, allpoints=False, dtype='_with_interlopers', toembed=False):
@@ -299,10 +340,11 @@ if __name__ == "__main__":
     n_list = tim_params['n_list']
 
     if(False):
-        for nslice, dz, toembed in zip(n_list, dz_list, (False, False, False)):
-            plot_sled_fig(nslice, z_list, (dz,), args.recompute_sleds, toembed=toembed)
+        for nslice, dz in zip(n_list, dz_list):
+            plot_sled_fig(nslice, z_list, (dz,), args.recompute_sleds)
             plt.show()
 
     if(True): 
         for nslice, dz in zip(n_list, dz_list):
+            if(nslice != 2): continue
             contrib_ms_sb(z_list, (dz*(nslice*2+1),), args.recompute_sleds)
